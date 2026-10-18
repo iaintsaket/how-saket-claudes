@@ -8,6 +8,7 @@ Agent skills I use with [Claude Code](https://claude.com/claude-code). Every ski
 | [bug-hunt](skills/bug-hunt) | Bug-bounty-grade source audit of a local clone: architecture first, source→sink taint tracing, validation, differential PoCs, report saved to disk | `/bug-hunt https://github.com/org/repo` |
 | [bug-review](skills/bug-review) | Adversarial triage of a finding before submission. Returns NOT_A_BUG, NEEDS_REVISION or VALID, and loops with bug-hunt up to 3 times | `/bug-review ~/bug_bounty/findings/<repo>/<finding>` |
 | [mock-interview](skills/mock-interview) | Timed, brutally honest DSA or LLD mock interview with a Hire/No Hire verdict and an optional Google Sheets progress log | `/mock-interview LLD` |
+| [repo-bootstrap](skills/repo-bootstrap) | Creates or hardens a GitHub repo: public by default, CI with an 80% coverage gate, and a default-branch ruleset (PR-only, green CI, no force-push or deletion), then verifies it live | `create a new repo called foo` |
 | [trip-itinerary](skills/trip-itinerary) | Hour-by-hour trip plans with live place research, hotel tiers, transport comparisons and budgets, with extra depth for India | `plan a 5-day trip to Rajasthan` |
 
 ## Install
