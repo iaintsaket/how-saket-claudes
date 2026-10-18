@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """Validate every skill against STANDARD.md (Agent Skills spec + house rules).
 
-Usage: python3 tools/validate_skills.py [skills_dir]   (default: ./skills)
+Usage: python3 tools/validate_skills.py [skills_dir] [--base <git-ref>]
+  skills_dir  default: ./skills
+  --base      also require a metadata.version bump for every skill changed since <git-ref>
+              (CI passes the PR's base branch)
 Exits non-zero if any skill has an error. Warnings don't fail the run.
 Standard library only; the frontmatter parser handles the subset of YAML we use.
 """
-import re, sys
+import re, subprocess, sys
 from pathlib import Path
 
 NAME_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
@@ -120,14 +123,43 @@ def check_skill(d: Path):
     return errors, warns
 
 
+def git(*args):
+    return subprocess.run(["git", *args], capture_output=True, text=True)
+
+
+def version_bump_errors(d: Path, base: str):
+    """A skill changed since `base` must carry a different metadata.version."""
+    changed = git("diff", "--name-only", f"{base}...HEAD", "--", str(d)).stdout.strip()
+    if not changed:
+        return []
+    old = git("show", f"{base}:{d.as_posix()}/SKILL.md")
+    if old.returncode != 0:
+        return []  # new skill
+    old_fm, _ = parse_frontmatter(old.stdout)
+    new_fm, _ = parse_frontmatter((d / "SKILL.md").read_text(encoding="utf-8"))
+    old_v = ((old_fm or {}).get("metadata") or {}).get("version")
+    new_v = ((new_fm or {}).get("metadata") or {}).get("version")
+    if old_v and old_v == new_v:
+        return [f"skill changed since {base} but metadata.version is still {new_v}; bump it"]
+    return []
+
+
 def main():
-    root = Path(sys.argv[1] if len(sys.argv) > 1 else "skills")
+    args = sys.argv[1:]
+    base = None
+    if "--base" in args:
+        i = args.index("--base")
+        base = args[i + 1]
+        del args[i:i + 2]
+    root = Path(args[0] if args else "skills")
     dirs = sorted(p for p in root.iterdir() if p.is_dir() and not p.name.startswith("."))
     if not dirs:
         sys.exit(f"no skills found in {root}")
     failed = 0
     for d in dirs:
         errors, warns = check_skill(d)
+        if base:
+            errors += version_bump_errors(d, base)
         status = "FAIL" if errors else "ok  "
         print(f"{status} {d.name}")
         for e in errors:
