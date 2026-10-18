@@ -65,7 +65,8 @@ Recommended skeleton. Use the sections that apply, in this order:
 ## 6. Change process
 
 1. Edit the skill and bump `metadata.version`: patch for wording, minor for new behaviour, major for a changed interface.
-2. Run `python3 tools/validate_skills.py` until it passes. CI runs the same check on every push.
-3. Try the skill once on a real prompt before merging.
+2. Run `python3 tools/validate_skills.py --base origin/main` until it passes.
+3. Try the skill once on a real prompt.
+4. Open a pull request. `main` is protected by a ruleset (`.github/rulesets/protect-main.json`): no direct pushes, force-pushes or deletion; changes land only through a PR whose `validate` check passes on an up-to-date branch with all review threads resolved. CI runs the validator (with the version-bump check) and the official `skills-ref` on every PR.
 
 Start a new skill from `templates/SKILL.template.md`.

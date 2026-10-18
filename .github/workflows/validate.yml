@@ -1,15 +1,30 @@
 name: validate-skills
-on: [push, pull_request]
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: [main]
+  workflow_dispatch:
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - name: House rules (STANDARD.md)
-        run: python3 tools/validate_skills.py
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            python3 tools/validate_skills.py --base "origin/${{ github.base_ref }}"
+          else
+            python3 tools/validate_skills.py
+          fi
       - name: Agent Skills spec (official skills-ref)
         run: |
           pip install "git+https://github.com/agentskills/agentskills.git#subdirectory=skills-ref"
