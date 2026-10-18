@@ -1,4 +1,4 @@
-# how-saket-envisions-skills
+# how-saket-claudes
 
 Agent skills I use with [Claude Code](https://claude.com/claude-code). Every skill follows the open [Agent Skills specification](https://agentskills.io/specification) plus the house rules in [STANDARD.md](STANDARD.md), so other harnesses that read `SKILL.md` folders (such as Codex) can load them too.
 
@@ -13,9 +13,9 @@ Agent skills I use with [Claude Code](https://claude.com/claude-code). Every ski
 ## Install
 
 ```bash
-git clone git@github.com:iaintsaket/how-saket-envisions-skills.git ~/my_codes/how-saket-envisions-skills
+git clone git@github.com:iaintsaket/how-saket-claudes.git ~/my_codes/how-saket-claudes
 mkdir -p ~/.claude/skills
-for s in ~/my_codes/how-saket-envisions-skills/skills/*/; do ln -sfn "$s" ~/.claude/skills/$(basename "$s"); done
+for s in ~/my_codes/how-saket-claudes/skills/*/; do ln -sfn "$s" ~/.claude/skills/$(basename "$s"); done
 ```
 
 The symlinks keep the repo as the single source of truth, so `git pull` updates every skill. For other harnesses, link into `~/.agents/skills/` instead.
