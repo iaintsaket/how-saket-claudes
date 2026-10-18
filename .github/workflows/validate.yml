@@ -1,0 +1,16 @@
+name: validate-skills
+on: [push, pull_request]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: House rules (STANDARD.md)
+        run: python3 tools/validate_skills.py
+      - name: Agent Skills spec (official skills-ref)
+        run: |
+          pip install "git+https://github.com/agentskills/agentskills.git#subdirectory=skills-ref"
+          for s in skills/*/; do skills-ref validate "$s"; done

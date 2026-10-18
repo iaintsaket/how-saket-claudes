@@ -1,0 +1,239 @@
+<title>{{TOPIC}} Course</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* TEMPLATE — retune --accent/--beam and the fonts to suit the subject; keep the token structure and both dark blocks.
+   Layout: single reading column, sticky module rail on top, each module = notes → read → watch → quiz */
+:root{
+  --bg:#f3f5f9; --surface:#ffffff; --ink:#152033; --muted:#55627a; --line:#d9dfea;
+  --accent:#2b5bd7; --accent-soft:#e3ebfd; --beam:#c26a00;
+  --ok:#1f7a4d; --ok-soft:#dcf2e6; --bad:#b3261e; --bad-soft:#fbe3e1;
+  --code-bg:#eef1f7;
+  --f-display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --f-body:"IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1420; --surface:#151d2c; --ink:#e4e9f3; --muted:#9aa6bd; --line:#26324a;
+  --accent:#7ea2ff; --accent-soft:#1d2a48; --beam:#f0a43a;
+  --ok:#5fd09a; --ok-soft:#163327; --bad:#ff8a80; --bad-soft:#3a1c1c; --code-bg:#0b111b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1420; --surface:#151d2c; --ink:#e4e9f3; --muted:#9aa6bd; --line:#26324a;
+  --accent:#7ea2ff; --accent-soft:#1d2a48; --beam:#f0a43a;
+  --ok:#5fd09a; --ok-soft:#163327; --bad:#ff8a80; --bad-soft:#3a1c1c; --code-bg:#0b111b; color-scheme:dark}
+
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.6}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:780px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+a{color:var(--accent)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--beam);outline-offset:2px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;line-height:1.15;margin:0}
+code,pre{font-family:var(--f-mono);font-size:.86em}
+:not(pre)>code{background:var(--code-bg);padding:.1em .35em;border-radius:4px}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow-x:auto;line-height:1.5;margin:0}
+
+header.hero{padding-block:48px 28px}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--beam)}
+.hero h1{font-size:clamp(34px,7vw,54px);font-weight:800;margin-top:8px}
+.hero p.lede{color:var(--muted);max-width:62ch;margin:12px 0 0}
+.facts{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:20px;font-size:14px;color:var(--muted)}
+.facts b{color:var(--ink);font-weight:600}
+
+/* ornament: ONE small subject-specific drawing (e.g. a pulse for Pulsar, a pod grid for Kubernetes). Redraw it per topic. */
+.pulse{display:block;width:100%;height:36px;margin-top:22px;color:var(--accent)}
+
+nav.rail{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+nav.rail .wrap{display:flex;gap:6px;overflow-x:auto;padding-block:10px;scrollbar-width:none;align-items:center}
+nav.rail a{flex:none;text-decoration:none;color:var(--muted);font-size:13px;font-weight:500;padding:5px 10px;border-radius:999px;border:1px solid var(--line);white-space:nowrap;display:flex;gap:6px;align-items:center}
+nav.rail a:hover{color:var(--ink);border-color:var(--accent)}
+nav.rail a .dot{width:7px;height:7px;border-radius:50%;background:var(--line)}
+nav.rail a.done .dot{background:var(--ok)}
+nav.rail .score{flex:none;margin-left:auto;font-family:var(--f-mono);font-size:12px;color:var(--muted);padding-left:10px;font-variant-numeric:tabular-nums}
+
+main{display:flex;flex-direction:column;gap:56px;padding-block:40px 64px}
+section.module{display:flex;flex-direction:column;gap:18px;scroll-margin-top:70px}
+.mhead{display:flex;flex-direction:column;gap:4px}
+.mnum{font-family:var(--f-mono);font-size:12px;color:var(--beam);letter-spacing:.06em}
+.mhead h2{font-size:clamp(24px,4.5vw,32px);font-weight:800}
+.mhead .meta{font-size:13px;color:var(--muted)}
+.notes ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.notes p{margin:0 0 8px}
+.callout{border-left:3px solid var(--beam);padding:4px 0 4px 14px;color:var(--muted);font-size:15px}
+
+h3.sub{font-size:13px;font-family:var(--f-mono);font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px}
+ul.links{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;border-top:1px solid var(--line)}
+ul.links li{display:grid;grid-template-columns:62px 1fr auto;gap:10px;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--line)}
+ul.links li > a{min-width:0;text-decoration:none;font-weight:500}
+ul.links li > a:hover{text-decoration:underline}
+ul.links .src{display:block;font-size:13px;color:var(--muted);font-weight:400}
+.tag{font-family:var(--f-mono);font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:2px 6px;border-radius:4px;text-align:center}
+.tag.docs{background:var(--accent-soft);color:var(--accent)}
+.tag.blog{background:var(--code-bg);color:var(--muted);border:1px solid var(--line)}
+.tag.video{background:var(--bad-soft);color:var(--bad)}
+.time{font-family:var(--f-mono);font-size:12px;color:var(--muted);white-space:nowrap}
+
+.quiz{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:18px}
+.quiz-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.quiz-top h3{font-size:19px}
+.quiz-top .qs{font-family:var(--f-mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.q{display:flex;flex-direction:column;gap:8px}
+.q p.stem{margin:0;font-weight:600}
+.opts{display:flex;flex-direction:column;gap:6px}
+.opt{all:unset;box-sizing:border-box;cursor:pointer;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:15px;line-height:1.45;background:var(--bg);color:var(--ink)}
+.opt:hover:not([disabled]){border-color:var(--accent)}
+.opt:focus-visible{outline:2px solid var(--beam);outline-offset:1px}
+.opt[disabled]{cursor:default}
+.opt.right{background:var(--ok-soft);border-color:var(--ok);color:var(--ink)}
+.tryit{border:1px dashed var(--line);border-radius:10px;padding:12px 14px}
+.tryit h3{margin-bottom:6px}
+.aim{font-size:15px;color:var(--ink);margin:6px 0 0}
+.aim b{color:var(--beam);font-family:var(--f-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;margin-right:6px}
+.opt.wrong{background:var(--bad-soft);border-color:var(--bad);color:var(--ink)}
+.explain{font-size:14px;color:var(--muted);margin:0}
+.explain b.ok{color:var(--ok)} .explain b.no{color:var(--bad)}
+.reset{all:unset;cursor:pointer;font-size:13px;color:var(--accent);align-self:flex-start}
+
+.capstone{background:var(--accent-soft);border-radius:12px;padding:20px}
+.capstone ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+footer{color:var(--muted);font-size:13px;padding-block:0 48px}
+@media (prefers-reduced-motion:no-preference){.pulse path{stroke-dasharray:900;stroke-dashoffset:900;animation:draw 2.4s ease-out forwards}@keyframes draw{to{stroke-dashoffset:0}}}
+@media (max-width:520px){ul.links li{grid-template-columns:1fr auto}ul.links li .tag{grid-column:1 / -1;justify-self:start}}
+</style>
+
+<header class="hero wrap">
+  <div class="eyebrow">Self-paced course · {{N}} modules · {{Q}} quiz questions</div>
+  <h1>{{HEADLINE e.g. "Apache Pulsar, from first topic to production"}}</h1>
+  <p class="lede">{{One or two sentences: what the learner will be able to do at the end, and how to use the page.}}</p>
+  <div class="facts">
+    <span><b>Time</b> {{~X hrs incl. reading}}</span>
+    <span><b>Level</b> {{beginner → working engineer}}</span>
+    <span><b>Prereqs</b> {{...}}</span>
+    <span><b>Version</b> {{current stable version, as of Mon YYYY}}</span>
+  </div>
+  <!-- {{ORNAMENT: replace with a small inline SVG specific to the subject}} -->
+  <svg class="pulse" viewBox="0 0 780 36" preserveAspectRatio="none" aria-hidden="true"><path d="M0 26 H90 L100 26 L106 4 L112 32 L118 26 H260 L270 26 L276 4 L282 32 L288 26 H430 L440 26 L446 4 L452 32 L458 26 H600 L610 26 L616 4 L622 32 L628 26 H780" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+</header>
+
+<nav class="rail" aria-label="Modules"><div class="wrap" id="rail"></div></nav>
+
+<main class="wrap" id="course"></main>
+
+<div class="wrap">
+  <section class="capstone" id="capstone">
+    <div class="mnum">CAPSTONE</div>
+    <h2 style="font-size:26px;margin-top:4px">{{Capstone title}}</h2>
+    <p style="margin:8px 0 0">{{One line: what it builds and how long it takes.}}</p>
+    <ol>
+      <li>{{Step that exercises module 1–2}}</li>
+      <li>{{...}}</li>
+      <li>{{3–5 steps total, each concrete and checkable}}</li>
+    </ol>
+  </section>
+</div>
+
+<footer class="wrap">
+  <p style="margin-top:32px"><b>Keep going:</b> {{3–5 verified links: official docs, official blog, repo, a good playlist or free course}}</p>
+  <p>Quiz progress is saved in this browser only. Links were checked as live when this course was built; trust the official docs where older talks differ.</p>
+</footer>
+
+<script>
+/* Short URL prefixes keep the data readable. verify_links.py understands them. */
+const D = "{{https://docs.example.org/}}";
+const YT = "https://www.youtube.com/watch?v=";
+
+/* One object per module. Fields:
+   id     short slug (anchor + storage key)
+   title  module title
+   time   rough time incl. reading
+   aim    the question this module answers ("How does X survive a broker crash?")
+   why    one line on why a practitioner should care
+   notes  HTML: 4–6 tight bullets, optional <pre> snippet, optional .callout takeaway
+   tryit  HTML: a 10–20 min hands-on task with a checkable outcome ("" to omit)
+   read   [type, title, source, url, time]   type = "docs" | "blog"
+   watch  [title, channel, url]              ([] if no verified video)
+   quiz   [stem, [4 options], correctIndex, explanation]  — spread correctIndex across 0–3 */
+const MODULES = [
+{
+  id:"example", title:"{{Module title}}", time:"45 min",
+  aim:"{{What question does this module answer?}}",
+  why:"{{Why it matters in practice, one line.}}",
+  notes:`<ul>
+    <li>{{Key idea with the real term of art in <b>bold</b>}}</li>
+  </ul>
+  <p class="callout">Takeaway: {{one sentence}}</p>`,
+  tryit:`<p>{{Do X, then check that Y happens.}}</p>`,
+  read:[ ["docs","{{Page title}}","{{Source}}",D+"{{path/}}","10 min"] ],
+  watch:[ ["{{Video title}}","{{Channel}}",YT+"{{videoId}}"] ],
+  quiz:[
+    ["{{Scenario question}}",["{{A}}","{{B}}","{{C}}","{{D}}"],2,"{{Why C is right, and what misconception B/D reflect.}}"],
+  ]
+},
+];
+/* ---------- render ---------- */
+const store = {
+  get(){ try { return JSON.parse(localStorage.getItem("{{topic-slug}}-course") || "{}"); } catch(e){ return {}; } },
+  set(v){ try { localStorage.setItem("{{topic-slug}}-course", JSON.stringify(v)); } catch(e){} }
+};
+let state = store.get();
+const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+
+const rail = document.getElementById("rail");
+const course = document.getElementById("course");
+const total = MODULES.reduce((n,m)=>n+m.quiz.length,0);
+
+MODULES.forEach((m,i)=>{
+  rail.insertAdjacentHTML("beforeend",`<a href="#${m.id}" id="nav-${m.id}"><span class="dot"></span>${i+1}. ${m.title.split(/[:&,]/)[0].trim()}</a>`);
+  const read = m.read.map(([t,title,src,url,time])=>`<li><span class="tag ${t}">${t}</span><a href="${url}" target="_blank" rel="noopener">${esc(title)}<span class="src">${esc(src)}</span></a><span class="time">${time}</span></li>`).join("");
+  const watch = m.watch.map(([title,ch,url])=>`<li><span class="tag video">video</span><a href="${url}" target="_blank" rel="noopener">${esc(title)}<span class="src">${esc(ch)} · YouTube</span></a><span class="time"></span></li>`).join("");
+  course.insertAdjacentHTML("beforeend",`
+  <section class="module" id="${m.id}">
+    <div class="mhead"><span class="mnum">MODULE ${i+1} OF ${MODULES.length}</span><h2>${m.title}</h2><span class="meta">~${m.time}</span></div>
+    ${m.aim ? `<p class="aim"><b>Question</b>${m.aim}</p>` : ""}
+    ${m.why ? `<p class="callout" style="margin:0">${m.why}</p>` : ""}
+    <div class="notes">${m.notes}</div>
+    ${m.tryit ? `<div class="tryit"><h3 class="sub">Try it</h3>${m.tryit}</div>` : ""}
+    <div><h3 class="sub">Read</h3><ul class="links">${read}</ul></div>
+    ${watch ? `<div><h3 class="sub">Watch</h3><ul class="links">${watch}</ul></div>` : ""}
+    <div class="quiz" id="quiz-${m.id}"></div>
+  </section>`);
+  renderQuiz(m);
+});
+rail.insertAdjacentHTML("beforeend",`<a href="#capstone"><span class="dot"></span>Capstone</a><span class="score" id="score"></span>`);
+updateScore();
+
+function renderQuiz(m){
+  const box = document.getElementById("quiz-"+m.id);
+  const ans = state[m.id] || {};
+  const correct = m.quiz.filter((q,qi)=>ans[qi]===q[2]).length;
+  const answered = Object.keys(ans).length;
+  box.innerHTML = `<div class="quiz-top"><h3>Quiz</h3><span class="qs">${answered===m.quiz.length?`Score ${correct}/${m.quiz.length}`:`${answered}/${m.quiz.length} answered`}</span></div>` +
+    m.quiz.map(([stem,opts,right,why],qi)=>{
+      const picked = ans[qi];
+      const done = picked !== undefined;
+      return `<div class="q"><p class="stem">${qi+1}. ${esc(stem)}</p><div class="opts">${
+        opts.map((o,oi)=>{
+          let cls = "opt";
+          if(done && oi===right) cls+=" right";
+          else if(done && oi===picked) cls+=" wrong";
+          return `<button class="${cls}" id="q-${m.id}-${qi}-${oi}" data-m="${m.id}" data-q="${qi}" data-o="${oi}" ${done?"disabled":""}>${esc(o)}</button>`;
+        }).join("")}</div>${done?`<p class="explain"><b class="${picked===right?"ok":"no"}">${picked===right?"Correct.":"Not quite."}</b> ${esc(why)}</p>`:""}</div>`;
+    }).join("") + (answered ? `<button class="reset" data-reset="${m.id}">Retake this quiz</button>` : "");
+  document.getElementById("nav-"+m.id).classList.toggle("done", answered===m.quiz.length);
+}
+
+function updateScore(){
+  let c=0;
+  MODULES.forEach(m=>{const a=state[m.id]||{}; m.quiz.forEach((q,qi)=>{ if(a[qi]===q[2]) c++; });});
+  document.getElementById("score").textContent = `${c}/${total} correct`;
+}
+
+course.addEventListener("click",e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  if(b.dataset.reset){ delete state[b.dataset.reset]; }
+  else { const {m,q,o} = b.dataset; (state[m] ||= {})[q] = +o; }
+  store.set(state);
+  const mod = MODULES.find(x=>x.id===(b.dataset.reset||b.dataset.m));
+  renderQuiz(mod); updateScore();
+});
+</script>
