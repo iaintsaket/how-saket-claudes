@@ -31,6 +31,7 @@ class Remind(unittest.TestCase):
         session = "group-{}".format(next(tempfile._get_candidate_names()))
         context = json.loads(remind(200000, session))["hookSpecificOutput"]["additionalContext"]
         self.assertIn("group of subtasks", context)
+        self.assertIn("run /compact when the group finishes", context)
 
 
 if __name__ == "__main__":
