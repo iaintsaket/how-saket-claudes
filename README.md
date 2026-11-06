@@ -6,6 +6,9 @@ Agent skills I use with [Claude Code](https://claude.com/claude-code). Every ski
 |---|---|---|
 | [course-builder](skills/course-builder) | Researches a tech topic and publishes a compact interactive course: modules, verified docs, blogs and YouTube videos, a hands-on task and a quiz per module | `create a course on Apache Pulsar` |
 | [context-first](skills/context-first) | Gathers focused context before a coding change (affected code, local patterns, PR history, MCP sources, risks), then plans and implements from that briefing | `/context-first add rate limiting to login` |
+| [skill-verifier](skills/skill-verifier) | Finds vague and unnecessary lines in a skill, comments on the exact PR lines, and fixes and pushes until scripts report the PR clean | `/skill-verifier 12` |
+| [test-first](skills/test-first) | Builds a change one assertion at a time in a ReAct loop: watch a test fail for the expected reason, pass it, validate on the real system, with script-checked proof of the order. | `/test-first` |
+| [blind-pr-review](skills/blind-pr-review) | Security-reviews a PR with fresh reviewers that see only the code, has the author fix each finding test-first, and repeats until two reviewers in a row find nothing. | `/blind-pr-review 12` |
 | [bug-hunt](skills/bug-hunt) | Bug-bounty-grade source audit of a local clone: architecture first, source→sink taint tracing, validation, differential PoCs, report saved to disk | `/bug-hunt https://github.com/org/repo` |
 | [bug-review](skills/bug-review) | Adversarial triage of a finding before submission. Returns NOT_A_BUG, NEEDS_REVISION or VALID, and loops with bug-hunt up to 3 times | `/bug-review ~/bug_bounty/findings/<repo>/<finding>` |
 | [mock-interview](skills/mock-interview) | Timed, brutally honest DSA or LLD mock interview with a Hire/No Hire verdict and an optional Google Sheets progress log | `/mock-interview LLD` |
@@ -23,6 +26,14 @@ for s in ~/my_codes/how-saket-claudes/skills/*/; do ln -sfn "$s" ~/.claude/skill
 
 The symlinks keep the repo as the single source of truth, so `git pull` updates every skill. For other harnesses, link into `~/.agents/skills/` instead.
 
+## Mods
+
+Mods change Claude Code itself. Skills above are instructions; a mod is code that runs inside the app.
+
+| Mod | What it does | Install |
+|---|---|---|
+| [progress-timeline](plugins/progress-timeline) | Opens a pane when a plan is ready and shows `progress.md` as a timeline of cards | `claude plugin install progress-timeline --marketplace iaintsaket/how-saket-claudes` |
+
 ## Add or change a skill
 
 1. Copy [templates/SKILL.template.md](templates/SKILL.template.md) to `skills/<name>/SKILL.md`, or edit an existing skill and bump `metadata.version`.
@@ -31,6 +42,8 @@ The symlinks keep the repo as the single source of truth, so `git pull` updates 
 ## Credits
 
 `course-builder` borrows ideas from [zarazhangrui/codebase-to-course](https://github.com/zarazhangrui/codebase-to-course) (application-style quizzes, writing modules one at a time), [jacquardlabs/study-skills](https://github.com/jacquardlabs/study-skills) (dependency-ordered concepts, never inventing citations) and [derwells/skills](https://github.com/derwells/skills) (lessons framed around a question).
+
+`test-first` draws on the ideas in [obra/superpowers](https://github.com/obra/superpowers)' test-driven-development skill (MIT) and [awslabs/aidlc-workflows](https://github.com/awslabs/aidlc-workflows) (MIT-0). `blind-pr-review`'s finding contract is adapted from the security review prompt in aidlc-workflows.
 
 ## License
 

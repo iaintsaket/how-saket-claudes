@@ -11,6 +11,9 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write # Inline skill-verifier comments. Fork PRs stay read-only.
     steps:
       - uses: actions/checkout@v4
         with:
@@ -25,6 +28,23 @@ jobs:
           else
             python3 tools/validate_skills.py
           fi
+      - name: Skill script tests
+        run: for t in skills/*/scripts/test_*.py; do python3 "$t"; done
+      - name: Skill verifier (vague or unnecessary lines)
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          BASE: origin/${{ github.base_ref }}
+          SAME_REPO: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+        run: |
+          status=0
+          python3 skills/skill-verifier/scripts/lint_skill.py --base "$BASE" --json > findings.json || status=$?
+          python3 skills/skill-verifier/scripts/lint_skill.py --base "$BASE" || true
+          if [ "$SAME_REPO" = "true" ]; then
+            python3 skills/skill-verifier/scripts/pr_review.py sync --pr "$PR" --findings findings.json
+          fi
+          exit "$status"
       - name: Agent Skills spec (official skills-ref)
         run: |
           pip install "git+https://github.com/agentskills/agentskills.git#subdirectory=skills-ref"
