@@ -5,6 +5,7 @@ Agent skills I use with [Claude Code](https://claude.com/claude-code). Every ski
 | Skill | What it does | Try |
 |---|---|---|
 | [course-builder](skills/course-builder) | Researches a tech topic and publishes a compact interactive course: modules, verified docs, blogs and YouTube videos, a hands-on task and a quiz per module | `create a course on Apache Pulsar` |
+| [context-first](skills/context-first) | Gathers focused context before a coding change (affected code, local patterns, PR history, MCP sources, risks), then plans and implements from that briefing | `/context-first add rate limiting to login` |
 | [bug-hunt](skills/bug-hunt) | Bug-bounty-grade source audit of a local clone: architecture first, source→sink taint tracing, validation, differential PoCs, report saved to disk | `/bug-hunt https://github.com/org/repo` |
 | [bug-review](skills/bug-review) | Adversarial triage of a finding before submission. Returns NOT_A_BUG, NEEDS_REVISION or VALID, and loops with bug-hunt up to 3 times | `/bug-review ~/bug_bounty/findings/<repo>/<finding>` |
 | [mock-interview](skills/mock-interview) | Timed, brutally honest DSA or LLD mock interview with a Hire/No Hire verdict and an optional Google Sheets progress log | `/mock-interview LLD` |
