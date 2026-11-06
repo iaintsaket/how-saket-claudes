@@ -21,6 +21,14 @@ for s in ~/my_codes/how-saket-claudes/skills/*/; do ln -sfn "$s" ~/.claude/skill
 
 The symlinks keep the repo as the single source of truth, so `git pull` updates every skill. For other harnesses, link into `~/.agents/skills/` instead.
 
+## Mods
+
+Mods change Claude Code itself. Skills above are instructions; a mod is code that runs inside the app.
+
+| Mod | What it does | Install |
+|---|---|---|
+| [progress-timeline](plugins/progress-timeline) | Opens a pane when a plan is ready and shows `progress.md` as a timeline of cards | `claude plugin install progress-timeline --marketplace iaintsaket/how-saket-claudes` |
+
 ## Add or change a skill
 
 1. Copy [templates/SKILL.template.md](templates/SKILL.template.md) to `skills/<name>/SKILL.md`, or edit an existing skill and bump `metadata.version`.
