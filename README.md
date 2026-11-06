@@ -5,6 +5,8 @@ Agent skills I use with [Claude Code](https://claude.com/claude-code). Every ski
 | Skill | What it does | Try |
 |---|---|---|
 | [course-builder](skills/course-builder) | Researches a tech topic and publishes a compact interactive course: modules, verified docs, blogs and YouTube videos, a hands-on task and a quiz per module | `create a course on Apache Pulsar` |
+| [test-first](skills/test-first) | Builds a change one assertion at a time in a ReAct loop: watch a test fail for the expected reason, pass it, validate on the real system, with script-checked proof of the order. | `/test-first` |
+| [blind-pr-review](skills/blind-pr-review) | Security-reviews a PR with fresh reviewers that see only the code, has the author fix each finding test-first, and repeats until two reviewers in a row find nothing. | `/blind-pr-review 12` |
 | [bug-hunt](skills/bug-hunt) | Bug-bounty-grade source audit of a local clone: architecture first, source→sink taint tracing, validation, differential PoCs, report saved to disk | `/bug-hunt https://github.com/org/repo` |
 | [bug-review](skills/bug-review) | Adversarial triage of a finding before submission. Returns NOT_A_BUG, NEEDS_REVISION or VALID, and loops with bug-hunt up to 3 times | `/bug-review ~/bug_bounty/findings/<repo>/<finding>` |
 | [mock-interview](skills/mock-interview) | Timed, brutally honest DSA or LLD mock interview with a Hire/No Hire verdict and an optional Google Sheets progress log | `/mock-interview LLD` |
@@ -37,6 +39,8 @@ Mods change Claude Code itself. Skills above are instructions; a mod is code tha
 ## Credits
 
 `course-builder` borrows ideas from [zarazhangrui/codebase-to-course](https://github.com/zarazhangrui/codebase-to-course) (application-style quizzes, writing modules one at a time), [jacquardlabs/study-skills](https://github.com/jacquardlabs/study-skills) (dependency-ordered concepts, never inventing citations) and [derwells/skills](https://github.com/derwells/skills) (lessons framed around a question).
+
+`test-first` draws on the ideas in [obra/superpowers](https://github.com/obra/superpowers)' test-driven-development skill (MIT) and [awslabs/aidlc-workflows](https://github.com/awslabs/aidlc-workflows) (MIT-0). `blind-pr-review`'s finding contract is adapted from the security review prompt in aidlc-workflows.
 
 ## License
 

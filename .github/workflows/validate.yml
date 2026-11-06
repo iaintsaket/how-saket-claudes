@@ -25,6 +25,8 @@ jobs:
           else
             python3 tools/validate_skills.py
           fi
+      - name: Skill script tests
+        run: for t in skills/*/scripts/test_*.py; do python3 "$t"; done
       - name: Agent Skills spec (official skills-ref)
         run: |
           pip install "git+https://github.com/agentskills/agentskills.git#subdirectory=skills-ref"
