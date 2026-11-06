@@ -101,14 +101,14 @@ def remind(hook):
     size = "{}k".format(round(tokens / 1000))
     print(json.dumps({
         "systemMessage": (
-            "Context is about {} tokens. Run /compact at the next clean "
-            "stopping point to reduce usage.".format(size)
+            "Context is about {} tokens. Run /compact when the current group "
+            "of subtasks is done to reduce usage.".format(size)
         ),
         "hookSpecificOutput": {
             "hookEventName": "UserPromptSubmit",
             "additionalContext": (
-                "Context is about {} tokens. If this prompt starts a new task, "
-                "or the current task has just finished, update progress.md "
+                "Context is about {} tokens. If this prompt starts a new task, or "
+                "the current task or group of subtasks has just finished, update progress.md "
                 "first, tell the user to run /compact, and wait for them before "
                 "starting the new work. If this prompt continues unfinished "
                 "work, carry on and do not mention compacting.".format(size)
