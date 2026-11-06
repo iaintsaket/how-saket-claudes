@@ -75,6 +75,28 @@ class Structure(unittest.TestCase):
         self.assertEqual(rules("# Brief\n\nBody.\n", path="skills/demo/references/a.md"), [])
 
 
+class Calibration(unittest.TestCase):
+    """False positives found by running the linter on the repo's real skills."""
+
+    def test_section_holding_only_a_code_block_is_not_empty(self):
+        self.assertEqual(rules(HEAD + "# T\n\n## A\n\n```\ncode\n```\n\n## B\n\nText.\n"), [])
+
+    def test_table_rows_are_data(self):
+        row = "| Area | Budget | Mid-range | Premium | Luxury Resort | Various |"
+        self.assertEqual(rules(HEAD + "# T\n\n" + row + "\n\n" + row + "\n"), [])
+
+    def test_hyphenated_identifier_is_not_a_placeholder(self):
+        self.assertEqual(rules(HEAD + "# T\n\nReport the CWE-XXX id.\n"), [])
+
+    def test_use_for_counts_as_a_trigger(self):
+        text = "---\nname: d\ndescription: Does X. Use for an audit.\nlicense: MIT\n---\n\n# T\n\nBody.\n"
+        self.assertEqual(rules(text), [])
+
+    def test_mentioning_a_folder_covers_its_files(self):
+        text = HEAD + "# T\n\nCopy from `assets/workflows/`.\n"
+        self.assertEqual(rules(text, files=["assets/workflows/go.yml"]), [])
+
+
 class DiffScope(unittest.TestCase):
     DIFF = "\n".join([
         "diff --git a/skills/demo/SKILL.md b/skills/demo/SKILL.md",
