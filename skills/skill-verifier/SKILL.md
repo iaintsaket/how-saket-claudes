@@ -10,7 +10,7 @@ license: MIT
 compatibility: Needs git, Python 3.9+ and an authenticated gh CLI.
 metadata:
   author: iaintsaket
-  version: "1.0.0"
+  version: "1.0.1"
 ---
 
 # Skill Verifier
@@ -50,6 +50,8 @@ Run scripts from the repo root, with the PR's branch checked out.
 4. **Report.** Give the user the summary below. The user merges.
 
 ## Output
+
+Fix the findings as needed.
 
 Findings live as comments on the PR. The final reply has the result, rounds run, what changed, rejected findings, and anything listed in `ignored_untrusted`.
 
