@@ -36,11 +36,11 @@ Run scripts from the repo root, with the PR's branch checked out.
    - `REVIEW` (exit 11): go to step 3.
    - `PASS` (exit 0): go to step 4.
    - `ESCALATE` (exit 20): stop and go to step 4 with what remains.
-2. **Fix.** For each thread in `threads`, read the comment and change the skill so the line is specific or gone. Bump `metadata.version` once per PR. Commit and push. For each `skill-review` thread you fixed, reply with what changed and close it:
+2. **Fix.** For each thread in `threads`, read the comment and change the skill so the line is specific or gone. Bump `metadata.version` once per PR. Commit and push. When CI is green, reply to each thread you fixed with what changed and close it:
    ```bash
    python3 skills/skill-verifier/scripts/pr_review.py resolve --thread ID --reply "Replaced with the exact list."
    ```
-   CI closes its own threads when the finding is gone. Return to step 1.
+   CI's token cannot close threads, so this applies to CI's threads too. Return to step 1.
 3. **Review.** Start one fresh read-only subagent with `references/reviewer-brief.md`, the changed skill's files and the PR diff. Give it no other context, and never fork this session. Save its JSON, post it, and count the round:
    ```bash
    python3 skills/skill-verifier/scripts/pr_review.py post --pr 12 --findings findings.json

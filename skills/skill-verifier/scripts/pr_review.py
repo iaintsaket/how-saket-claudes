@@ -155,9 +155,8 @@ def sync(args):
                      "body": "**{}**: {}\n\n<!-- skill-lint:{} -->".format(
                          f["rule"], f["message"], fingerprint(f))} for f in post]
         post_comments(owner, name, args.pr, comments, "skill-verifier found {} issue(s).".format(len(post)))
-    for thread_id in resolve:
-        graphql(RESOLVE, id=thread_id)
-    print(json.dumps({"posted": len(post), "resolved": len(resolve), "open": len(findings)}))
+    # The workflow token cannot resolve threads, so the fix loop closes these.
+    print(json.dumps({"posted": len(post), "stale_threads": len(resolve), "open": len(findings)}))
 
 
 def post(args):
