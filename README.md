@@ -5,6 +5,7 @@ Agent skills I use with [Claude Code](https://claude.com/claude-code). Every ski
 | Skill | What it does | Try |
 |---|---|---|
 | [course-builder](skills/course-builder) | Researches a tech topic and publishes a compact interactive course: modules, verified docs, blogs and YouTube videos, a hands-on task and a quiz per module | `create a course on Apache Pulsar` |
+| [context-first](skills/context-first) | Gathers focused context before a coding change (affected code, local patterns, PR history, MCP sources, risks), then plans and implements from that briefing | `/context-first add rate limiting to login` |
 | [skill-verifier](skills/skill-verifier) | Finds vague and unnecessary lines in a skill, comments on the exact PR lines, and fixes and pushes until scripts report the PR clean | `/skill-verifier 12` |
 | [test-first](skills/test-first) | Builds a change one assertion at a time in a ReAct loop: watch a test fail for the expected reason, pass it, validate on the real system, with script-checked proof of the order. | `/test-first` |
 | [blind-pr-review](skills/blind-pr-review) | Security-reviews a PR with fresh reviewers that see only the code, has the author fix each finding test-first, and repeats until two reviewers in a row find nothing. | `/blind-pr-review 12` |
