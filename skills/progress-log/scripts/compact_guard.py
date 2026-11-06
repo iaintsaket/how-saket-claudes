@@ -111,7 +111,7 @@ def remind(hook):
                 "the current task or group of subtasks has just finished, update progress.md "
                 "first, tell the user to run /compact, and wait for them before "
                 "starting the new work. If this prompt continues unfinished "
-                "work, carry on and do not mention compacting.".format(size)
+                "work, carry on, and tell the user to run /compact when the group finishes.".format(size)
             ),
         },
     }))

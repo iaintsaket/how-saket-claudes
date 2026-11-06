@@ -15,7 +15,7 @@ REMOVE:
 - Tool output, logs, search results and command output.
 - Web pages, documentation and schemas already read. Keep the URL and the conclusion.
 - Finished subtasks. Their record is in progress.md.
-- Debugging that led to a fix. Keep the root cause if it may recur.
+- Debugging steps that led to a fix, except the failed approaches kept above. Keep the root cause if it may recur.
 - Text from loaded skills, and instructions that are already in CLAUDE.md.
 - Exploration that ended up unused, greetings and progress narration.
 

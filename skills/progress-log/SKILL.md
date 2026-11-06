@@ -2,7 +2,8 @@
 name: progress-log
 description: >-
   Keeps the plan and the record of work in one progress.md: subtasks grouped by
-  relevance, how each one runs, and a table proving what was achieved. Compaction
+  relevance, how each one runs, and a table proving what was achieved. Code is
+  built test-first, and a finished plan gets an independent PR review. Compaction
   lands between groups, so progress survives and context stays small. Use when
   planning work with several steps, when a task or subtask finishes, when a compact
   reminder appears, or when the user says "update progress", "log progress",
@@ -10,7 +11,8 @@ description: >-
 license: MIT
 compatibility: >-
   The reminder, compaction rules and restore need Claude Code hooks and python3.
-  See references/hooks-setup.md.
+  See references/hooks-setup.md. Building code needs the test-first skill, and
+  the final review needs the blind-pr-review skill.
 metadata:
   author: iaintsaket
   version: "0.2.0"
@@ -33,7 +35,7 @@ metadata:
    - Label how each subtask runs, using the table under Output.
    - After plan mode, copy the approved subtasks here.
 3. **Build test-first.** Write each code subtask as a claim a test can prove, and build it with the `test-first` skill. Skip this for docs, config and research subtasks.
-4. **Log.** Tick a subtask when it is verified done, not when it is attempted. Add new subtasks as they appear. Add one line for each decision or failed approach a later session must not repeat.
+4. **Log.** Tick a subtask only after a test, command result or PR shows it is done, and put that result on the subtask line. Add new subtasks as they appear. Add one line for each decision or failed approach a later session must not repeat.
 5. **Handle a compact reminder.**
    - If the prompt starts a new task, or a group or task just finished: update the log, tell the user to run `/compact`, and wait.
    - If the prompt continues an unfinished group: carry on, then do the step above when that group finishes.
@@ -83,6 +85,6 @@ After a log update with nothing else to report, reply with one line saying what 
 ## Files
 
 - `scripts/compact_guard.py`: the hook helper for the reminder, the compaction rules and the restore. Hooks run it.
-- `scripts/test_compact_guard.py`: tests for the reminder.
+- `scripts/test_compact_guard.py`: run after changing `compact_guard.py`.
 - `assets/compact-rules.md`: what compaction keeps and removes. Edit this to change the rules.
 - `references/hooks-setup.md`: read when installing or changing the hooks.
