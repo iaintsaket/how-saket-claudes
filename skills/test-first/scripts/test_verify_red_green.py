@@ -99,6 +99,12 @@ class VerifyRedGreen(unittest.TestCase):
         self.assertEqual(done.returncode, 1)
         self.assertIn("does not descend", done.stdout)
 
+    def test_reads_file_names_with_spaces_correctly(self):
+        red = self.repo.commit({"tests/test app.py": TEST})
+        green = self.repo.commit({"app.py": "def value():\n    return 2\n"})
+        done = verify(self.repo, red, green, test="tests/test app.py")
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+
     def test_leaves_no_worktrees_behind(self):
         red = self.repo.commit({"tests/test_app.py": TEST})
         green = self.repo.commit({"app.py": "def value():\n    return 2\n"})

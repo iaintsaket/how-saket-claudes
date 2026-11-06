@@ -180,13 +180,18 @@ class Run(unittest.TestCase):
 
     def test_the_reviewer_can_only_read(self):
         cmd = run_review.build_cmd("prompt")
-        tools = cmd[cmd.index("--tools") + 1 : cmd.index("--allowedTools")]
+        tools = cmd[cmd.index("--tools") + 1 :]
         self.assertEqual(sorted(tools), ["Glob", "Grep", "Read"])
         self.assertNotIn("--resume", cmd)
         self.assertEqual(cmd[cmd.index("--setting-sources") + 1], "")
         self.assertEqual(cmd[cmd.index("--permission-mode") + 1], "dontAsk")
         self.assertIn("--strict-mcp-config", cmd)
         self.assertIn("--no-session-persistence", cmd)
+
+    def test_no_blanket_allow_rule_opens_the_whole_disk(self):
+        # A live probe read a marker in the home folder while Read was on --allowedTools.
+        # dontAsk with no allow rules keeps tools inside the working folder.
+        self.assertNotIn("--allowedTools", run_review.build_cmd("prompt"))
 
     def test_the_reviewer_inherits_no_secrets_from_the_environment(self):
         env = run_review.review_env({"HOME": "/h", "PATH": "/p", "GH_TOKEN": "x", "AWS_KEY": "y"})
