@@ -1,6 +1,6 @@
 # progress-timeline
 
-A Claude Code mod that shows `progress.md` as a timeline in a pane beside the chat. It opens by itself when a plan is ready.
+A Claude Code mod that shows the chat's progress log as a timeline in a pane beside the chat. It opens by itself when a plan is ready.
 
 ```
                        2026-11-06
@@ -36,15 +36,15 @@ Accept the marketplace, and keep the user scope so the mod runs in every new ses
 
 ## When the pane opens
 
-- A new `## ` section appears in `progress.md`. It checks the file every 2 seconds.
-- A session starts in a project whose `progress.md` already has sections.
+- A new `## ` section appears in the chat's log. It checks the file every 2 seconds.
+- A chat is resumed and its log already has sections.
 - You approve a plan in plan mode.
 
 Run `/progress-timeline` to open it at any other time. If you close it, it stays closed until the next new plan. Claude Code shows an unrequested pane only in a wide enough terminal: its docs give 144 columns, or 110 in some cases. In a narrower one, run `/progress-timeline`.
 
 ## The file it reads
 
-It looks for `progress.md` in the working directory and in the folders above it, stopping at the git root. It only reads the file, and needs this format:
+It reads this chat's own log, `~/.claude/progress/<session id>.md`, which the `progress-log` skill writes, so two chats never show each other's progress. It only reads the file, and needs this format:
 
 ```markdown
 ## Task name (2026-11-06)
