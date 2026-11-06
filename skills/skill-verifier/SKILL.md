@@ -51,8 +51,6 @@ Run scripts from the repo root, with the PR's branch checked out.
 
 ## Output
 
-Fix the findings as needed.
-
 Findings live as comments on the PR. The final reply has the result, rounds run, what changed, rejected findings, and anything listed in `ignored_untrusted`.
 
 ## Rules
