@@ -1,0 +1,1 @@
+{ "name": "progress-timeline", "version": "0.1.0", "description": "Opens a pane when a plan is ready and shows progress.md as a timeline of cards", "types": "./types/index.d.ts" }
