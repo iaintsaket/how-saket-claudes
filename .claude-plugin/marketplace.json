@@ -1,0 +1,11 @@
+{
+  "name": "how-saket-claudes",
+  "owner": { "name": "iaintsaket" },
+  "plugins": [
+    {
+      "name": "progress-timeline",
+      "source": "./plugins/progress-timeline",
+      "description": "Opens a pane when a plan is ready and shows progress.md as a timeline of cards"
+    }
+  ]
+}
