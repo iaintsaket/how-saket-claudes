@@ -10,6 +10,6 @@ Add these to `hooks` in `~/.claude/settings.json`, merging with any existing hoo
 }
 ```
 
-- `remind` reads the context size from the transcript. The first reminder comes at 150,000 tokens, then one more every 100,000. To change this, set `CONTEXT_REMIND_TOKENS` and `CONTEXT_REMIND_STEP` under `env` in settings. These are chosen defaults, not limits set by Claude Code.
+- `remind` reads the context size from the transcript. The first reminder comes at 150,000 tokens, then one more every 100,000. To change this, set `CONTEXT_REMIND_TOKENS` and `CONTEXT_REMIND_STEP` under `env` in settings.
 - `rules` prints `assets/compact-rules.md`. Plain output from a PreCompact hook becomes the compaction instructions, capped at 10,000 characters.
 - `restore` prints the last 8,000 characters of `progress.md` after a compaction.
