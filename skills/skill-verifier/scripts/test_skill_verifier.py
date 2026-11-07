@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Tests for lint_skill.py and pr_review.py. Run: python3 test_skill_verifier.py"""
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -210,6 +211,51 @@ class Decide(unittest.TestCase):
     def test_escalates_after_the_round_limit_unless_passing(self):
         self.assertEqual(pr.decide("success", 1, "h", "", pr.MAX_ROUNDS + 1), "ESCALATE")
         self.assertEqual(pr.decide("success", 0, "h", "h", pr.MAX_ROUNDS + 1), "PASS")
+
+
+def item(file="f.md", line=1, quote="same words here", rule="vague"):
+    return {"file": file, "line": line, "quote": quote, "rule": rule, "message": "m"}
+
+
+class Merge(unittest.TestCase):
+    def test_a_finding_both_reviewers_made_appears_once(self):
+        merged = pr.merge_findings([[item()], [item(rule="unnecessary")]])
+        self.assertEqual(len(merged), 1)
+
+    def test_findings_on_different_lines_are_all_kept(self):
+        merged = pr.merge_findings([[item(line=1)], [item(line=2)]])
+        self.assertEqual([f["line"] for f in merged], [1, 2])
+
+    def test_two_empty_reviews_merge_to_nothing(self):
+        self.assertEqual(pr.merge_findings([[], []]), [])
+
+    def test_the_first_reviewers_wording_wins(self):
+        first, second = dict(item(), message="first"), dict(item(), message="second")
+        self.assertEqual(pr.merge_findings([[first], [second]])[0]["message"], "first")
+
+
+class CountReturned(unittest.TestCase):
+    def test_counts_every_finding_the_reviewer_returned(self):
+        self.assertEqual(pr.count_findings(json.dumps([item(), item(line=2), item(line=3)])), 3)
+
+    def test_an_empty_review_counts_zero(self):
+        self.assertEqual(pr.count_findings("[]"), 0)
+
+    def test_text_that_is_not_a_list_is_refused_not_counted_as_clean(self):
+        with self.assertRaises(SystemExit):
+            pr.count_findings("not json")
+        with self.assertRaises(SystemExit):
+            pr.count_findings('{"findings": []}')
+
+
+class NextState(unittest.TestCase):
+    def test_a_review_that_returned_findings_is_never_clean(self):
+        state = pr.next_state({"rounds": 2, "clean_head": ""}, 3, "h")
+        self.assertEqual(state, {"rounds": 3, "clean_head": ""})
+
+    def test_a_review_that_returned_nothing_marks_this_head_clean(self):
+        state = pr.next_state({"rounds": 0, "clean_head": ""}, 0, "h")
+        self.assertEqual(state, {"rounds": 1, "clean_head": "h"})
 
 
 if __name__ == "__main__":
