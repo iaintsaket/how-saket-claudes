@@ -17,7 +17,7 @@ metadata:
 
 # Staff Engineer Reviewer
 
-Authors check that a change works. A staff engineer asks whether it should exist, and what it does to the system on a bad day. This skill gets that second opinion from a reviewer who has not seen the author's reasoning, only the stated goal. A script rejects findings that are not tied to a real line and a real failure, so every accepted `block` or `should-fix` finding is one the author must act on.
+This skill gets that second opinion from a reviewer who has not seen the author's reasoning, only the stated goal. A script rejects findings that are not tied to a real line and a real failure, so every accepted `block` or `should-fix` finding is one the author must act on.
 
 ## Inputs
 
@@ -48,7 +48,7 @@ Keep state in `~/.claude/staff-review/<repo>-<id>/`, outside the repo, with a `r
    - `block` and `should-fix` on code: change it test-first with the `test-first` skill, then push.
    - `block` and `should-fix` on a plan: revise the plan and say what changed.
    - `consider`: list it for the user. Do not act on it without being asked.
-   If you disagree with a finding, leave it as it is and tell the user why. Only the user dismisses a finding.
+   If you disagree with a finding, leave it as it is, tell the user why, and leave it out of the step 6 stop test. Only the user dismisses a finding.
 6. **Repeat.** After any fix, start a new round with a new reviewer. Stop when a round has no accepted `block` or `should-fix` findings, or after 3 rounds.
 7. **Report.** Give the user the summary below. The user merges.
 

@@ -16,7 +16,7 @@ Report only these classes:
 Severity:
 
 - `block`: do not merge. Data loss, a broken caller, or the goal not met.
-- `should-fix`: merge only with a decision from the owner.
+- `should-fix`: a failure that needs an uncommon input or event, or a goal met only in part, with no data loss.
 - `consider`: a cheaper or safer way exists. The scenario names a cost or risk that is real but does not block the merge.
 
 Do not report style, naming, formatting or preference, and do not report a security vulnerability: another review covers it. A finding that cannot say what breaks, and when, is not a finding. Say nothing about code the change did not touch, unless the change makes it wrong.
