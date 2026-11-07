@@ -45,18 +45,30 @@ class DiffMode(unittest.TestCase):
     def check(self, item):
         return cf.check([item], cf.Source.from_diff(DIFF, {"app/cache.py": "a\nb\nc\n    CACHE[key] = value\n    return value\n"}))
 
-    def test_accepts_a_quote_on_an_added_line(self):
+    def test_accepts_a_quote_on_an_added_line_and_marks_it_in_the_diff(self):
         accepted, rejected = self.check(finding())
-        self.assertEqual((len(accepted), rejected), (1, []))
+        self.assertEqual((len(accepted), rejected, accepted[0]["in_diff"]), (1, [], True))
 
     def test_rejects_a_quote_that_is_not_on_the_line(self):
         _, rejected = self.check(finding(quote="something invented here"))
         self.assertIn("quote", rejected[0]["reason"])
 
-    def test_rejects_a_line_the_diff_did_not_add(self):
+    def test_accepts_an_unchanged_line_and_marks_it_outside_the_diff(self):
         text = "\n".join(["x"] * 3 + ["    CACHE[key] = value"] + ["y"] * 30)
-        _, rejected = cf.check([finding(line=1, quote="x")], cf.Source.from_diff(DIFF, {"app/cache.py": text}))
-        self.assertIn("not added", rejected[0]["reason"])
+        accepted, rejected = cf.check([finding(line=1, quote="x")], cf.Source.from_diff(DIFF, {"app/cache.py": text}))
+        self.assertEqual((rejected, accepted[0]["in_diff"]), ([], False))
+
+    def test_accepts_a_file_the_diff_never_touched_through_the_loader(self):
+        loader = lambda name: "intro\nstill says progress.md here\n" if name == "README.md" else None
+        source = cf.Source.from_diff(DIFF, {}, loader)
+        item = finding(file="README.md", line=2, quote="still says progress.md", **{"class": "scope"})
+        accepted, rejected = cf.check([item], source)
+        self.assertEqual((rejected, accepted[0]["in_diff"]), ([], False))
+
+    def test_rejects_a_file_the_loader_cannot_read(self):
+        source = cf.Source.from_diff(DIFF, {}, lambda name: None)
+        _, rejected = cf.check([finding(file="missing.py", line=1, quote="x")], source)
+        self.assertIn("file", rejected[0]["reason"])
 
 
 class FileMode(unittest.TestCase):
@@ -137,6 +149,23 @@ class Cli(unittest.TestCase):
                                    "--diff", str(root / "change.diff"), "--root", str(root)],
                                   capture_output=True, text=True)
         self.assertEqual((done.returncode, len(json.loads(done.stdout)["accepted"])), (0, 1))
+
+    def test_diff_mode_reads_an_untouched_file_but_never_one_outside_the_checkout(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder) / "checkout"
+            root.mkdir()
+            (root / "README.md").write_text("intro\nstill says progress.md here\n")
+            (Path(folder) / "secret.txt").write_text("outside the checkout\n")
+            (root / "change.diff").write_text(DIFF)
+            findings = [finding(file="README.md", line=2, quote="still says progress.md", **{"class": "scope"}),
+                        finding(file="../secret.txt", line=1, quote="outside the checkout")]
+            (root / "findings.json").write_text(json.dumps(findings))
+            done = subprocess.run([sys.executable, str(SCRIPT), "--findings", str(root / "findings.json"),
+                                   "--diff", str(root / "change.diff"), "--root", str(root)],
+                                  capture_output=True, text=True)
+        out = json.loads(done.stdout)
+        self.assertEqual((len(out["accepted"]), len(out["rejected"])), (1, 1))
+        self.assertEqual(out["accepted"][0]["file"], "README.md")
 
 
 if __name__ == "__main__":
