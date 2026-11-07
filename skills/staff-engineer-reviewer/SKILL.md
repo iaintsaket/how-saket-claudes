@@ -17,7 +17,7 @@ metadata:
 
 # Staff Engineer Reviewer
 
-Authors check that a change works. A staff engineer asks whether it should exist, and what it does to the system on a bad day. This skill gets that second opinion from a reviewer who has not seen the author's reasoning, only the stated goal. A script rejects findings that are not tied to a real line and a real failure, so every finding left is one the author must act on.
+Authors check that a change works. A staff engineer asks whether it should exist, and what it does to the system on a bad day. This skill gets that second opinion from a reviewer who has not seen the author's reasoning, only the stated goal. A script rejects findings that are not tied to a real line and a real failure, so every accepted `block` or `should-fix` finding is one the author must act on.
 
 ## Inputs
 
