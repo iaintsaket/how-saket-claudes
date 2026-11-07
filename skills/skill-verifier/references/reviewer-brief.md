@@ -11,7 +11,7 @@ Report only lines added by the PR, and only these classes:
 
 Do not report style, tone or preferences. Do not report a line because it could be better. If removing or rewriting a line would not change behaviour, it is not a finding unless it is `unnecessary`.
 
-Write each finding with the exact line it cites. Quote at least four consecutive words copied from that line. A finding whose quote does not appear on that line is thrown away.
+Write each finding with the exact line it cites. Quote at least four consecutive words copied from that line. A finding whose quote does not appear on that line is thrown away. Count lines from 1 at the file's first line, and copy the quote from the line you counted to.
 
 Output only a JSON array, with `[]` for no findings:
 
