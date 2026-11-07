@@ -5,7 +5,9 @@
     check_findings.py --findings F.json --file plan.md
 
 Prints {"accepted": [...], "rejected": [{"finding": ..., "reason": ...}]}, blocking findings
-first. Exit 0 when every finding is accepted, 1 when any is rejected.
+first. A finding may cite any real line of a file in the checkout, because the worst misses are
+lines the change should have touched. Each accepted finding says whether the change added its
+line, as `in_diff`. Exit 0 when every finding is accepted, 1 when any is rejected.
 """
 from __future__ import annotations
 
@@ -40,33 +42,41 @@ def added_lines(diff):
 
 
 class Source:
-    """What a finding may cite: the lines a diff adds, or any line of one file."""
+    """What a finding may cite: any real line of a file, marked by whether the change added it."""
 
-    def __init__(self, texts, allowed):
-        self.texts = texts
-        self.allowed = allowed  # file -> set of citable lines, or None for every line
+    def __init__(self, texts, added, loader=None):
+        self.texts = dict(texts)
+        self.added = added  # file -> line numbers the change adds, or None when the whole file is under review
+        self.loader = loader
 
     @classmethod
-    def from_diff(cls, diff, texts):
-        return cls(texts, added_lines(diff))
+    def from_diff(cls, diff, texts, loader=None):
+        return cls(texts, added_lines(diff), loader)
 
     @classmethod
     def from_file(cls, name, text):
         return cls({name: text}, {name: None})
 
+    def text_of(self, name):
+        if name not in self.texts and self.loader and isinstance(name, str):
+            self.texts[name] = self.loader(name)
+        return self.texts.get(name)
+
     def problem(self, item):
         name, line, quote = item.get("file"), item.get("line"), item.get("quote")
-        if name not in self.texts or name not in self.allowed:
+        text = self.text_of(name)
+        if text is None:
             return "file {} is not part of this review".format(name)
         if not isinstance(line, int) or not isinstance(quote, str) or not quote:
             return "line and quote are required"
-        rows = self.texts[name].split("\n")
+        rows = text.split("\n")
         if not 1 <= line <= len(rows) or quote not in rows[line - 1]:
             return "quote is not on line {} of {}".format(line, name)
-        limit = self.allowed[name]
-        if limit is not None and line not in limit:
-            return "line {} of {} was not added by this change".format(line, name)
         return None
+
+    def in_diff(self, item):
+        lines = self.added.get(item["file"], set())
+        return lines is None or item["line"] in lines
 
 
 def contract_problem(item):
@@ -90,9 +100,22 @@ def check(findings, source):
         if reason:
             rejected.append({"finding": item, "reason": reason})
         else:
-            accepted.append(item)
+            accepted.append(dict(item, in_diff=source.in_diff(item)))
     accepted.sort(key=lambda f: SEVERITIES.index(f["severity"]))
     return accepted, rejected
+
+
+def checkout_reader(root):
+    """Read a file of the checkout, never one outside it."""
+    base = root.resolve()
+
+    def read(name):
+        target = (base / name).resolve()
+        if base not in target.parents or not target.is_file():
+            return None
+        return target.read_text(errors="replace")
+
+    return read
 
 
 def main():
@@ -109,13 +132,7 @@ def main():
     if args.file:
         source = Source.from_file(Path(args.file).name, Path(args.file).read_text())
     else:
-        diff = Path(args.diff).read_text()
-        texts = {}
-        for name in added_lines(diff):
-            target = Path(args.root) / name
-            if target.is_file():
-                texts[name] = target.read_text(errors="replace")
-        source = Source.from_diff(diff, texts)
+        source = Source.from_diff(Path(args.diff).read_text(), {}, checkout_reader(Path(args.root)))
     accepted, rejected = check(findings, source)
     print(json.dumps({"accepted": accepted, "rejected": rejected}, indent=2))
     return 1 if rejected else 0
