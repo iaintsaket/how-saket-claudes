@@ -32,7 +32,7 @@ Mods change Claude Code itself. Skills above are instructions; a mod is code tha
 
 | Mod | What it does | Install |
 |---|---|---|
-| [progress-timeline](plugins/progress-timeline) | Opens a pane when a plan is ready and shows `progress.md` as a timeline of cards | `claude plugin install progress-timeline --marketplace iaintsaket/how-saket-claudes` |
+| [progress-timeline](plugins/progress-timeline) | Opens a pane when a plan is ready and shows the progress log of each chat as a timeline of cards | `claude plugin install progress-timeline --marketplace iaintsaket/how-saket-claudes` |
 
 ## Add or change a skill
 

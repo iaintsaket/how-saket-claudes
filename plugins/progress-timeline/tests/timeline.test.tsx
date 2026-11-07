@@ -120,6 +120,8 @@ test('reads the log, draws a card, and the chevron opens its steps', async ($, o
   on('ui.open', () => ({ value: { isPlaced: true } }))
   on('session.start', (_, e) => ({ cwd: e.cwd }))
   on('clock.every', () => ({ value: undefined }))
+  on('env.get', () => ({ value: '/home/me' }))
+  on('session.id', () => ({ value: 'chat-1' }))
   on('fs.exists', () => ({ value: true }))
   on('fs.stat', () => ({ value: { mtimeMs: 1 } }))
   on('fs.read', () => ({ value: LOG }))
@@ -143,6 +145,8 @@ const world = (on: any, log: () => string, opens: string[]) => {
     return { value: { isPlaced: true } }
   })
   on('session.start', (_: unknown, e: { cwd: string }) => ({ cwd: e.cwd }))
+  on('env.get', () => ({ value: '/home/me' }))
+  on('session.id', () => ({ value: 'chat-1' }))
   on('fs.exists', () => ({ value: log() !== '' }))
   on('fs.stat', () => ({ value: { mtimeMs: log().length } }))
   on('fs.read', () => ({ value: log() }))
