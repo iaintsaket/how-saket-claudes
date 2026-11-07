@@ -4,7 +4,8 @@
     pr_review.py sync --pr N --findings F.json        CI: mirror lint findings to the PR
     pr_review.py post --pr N --findings F.json        Reviewer: post checked findings
     pr_review.py status --pr N                        Print the next step
-    pr_review.py record --pr N --findings-count N     Count a finished review round
+    pr_review.py merge --findings A.json B.json --out M.json   Combine reviewers of one round
+    pr_review.py record --pr N --findings F.json      Count a finished round from what the reviewers returned
     pr_review.py resolve --thread ID --reply TEXT     Reply to a fixed thread and close it
 
 status exit codes: PASS 0, FIX 10, REVIEW 11, WAIT 12, ESCALATE 20.
@@ -57,6 +58,34 @@ def fingerprint(item):
     """A finding keeps its identity when other edits move its line."""
     key = "{}|{}|{}".format(item["file"], item["rule"], item["text"])
     return hashlib.sha256(key.encode()).hexdigest()[:16]
+
+
+def merge_findings(lists):
+    """One finding per file, line and quote, so reviewers that agree count once. The first wording wins."""
+    seen, merged = set(), []
+    for findings in lists:
+        for item in findings:
+            key = (item.get("file"), item.get("line"), item.get("quote"))
+            if key not in seen:
+                seen.add(key)
+                merged.append(item)
+    return merged
+
+
+def count_findings(text):
+    """How many findings the reviewers returned. Anything but a JSON list is refused, never read as clean."""
+    try:
+        data = json.loads(text)
+    except ValueError:
+        data = None
+    if not isinstance(data, list):
+        sys.exit("findings must be a JSON list; an empty list means a clean review")
+    return len(data)
+
+
+def next_state(state, count, head):
+    """A round is clean only when the reviewers returned nothing, whatever `post` later rejected."""
+    return {"rounds": state["rounds"] + 1, "clean_head": head if count == 0 else state["clean_head"]}
 
 
 def trusted(author, owner):
@@ -210,13 +239,22 @@ def status(args):
 def record(args):
     owner, name = repo()
     path = state_path(owner, name, args.pr)
-    state = read_state(path)
-    state["rounds"] += 1
-    if args.findings_count == 0:
-        state["clean_head"] = head_of(args.pr)
+    count = count_findings(Path(args.findings).read_text())
+    state = next_state(read_state(path), count, head_of(args.pr) if count == 0 else "")
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(state))
     print(json.dumps(state))
+
+
+def merge(args):
+    lists = []
+    for name in args.findings:
+        text = Path(name).read_text()
+        count_findings(text)
+        lists.append(json.loads(text))
+    merged = merge_findings(lists)
+    Path(args.out).write_text(json.dumps(merged, indent=2))
+    print(json.dumps({"returned": [len(x) for x in lists], "merged": len(merged)}))
 
 
 def resolve(args):
@@ -238,8 +276,12 @@ def main():
     sub.set_defaults(handler=status)
     sub = commands.add_parser("record")
     sub.add_argument("--pr", type=int, required=True)
-    sub.add_argument("--findings-count", type=int, required=True)
+    sub.add_argument("--findings", required=True)
     sub.set_defaults(handler=record)
+    sub = commands.add_parser("merge")
+    sub.add_argument("--findings", nargs="+", required=True)
+    sub.add_argument("--out", required=True)
+    sub.set_defaults(handler=merge)
     sub = commands.add_parser("resolve")
     sub.add_argument("--thread", required=True)
     sub.add_argument("--reply", required=True)
