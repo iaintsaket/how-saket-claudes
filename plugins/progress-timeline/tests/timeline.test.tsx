@@ -1,6 +1,6 @@
 import { expect, mock, test } from 'claude-code/testing'
 
-import { dots, layout, parseProgress, paneColumns, screenColumns, statusOf, wrapLines } from '../hooks/register'
+import { dots, layout, logPath, parseProgress, paneColumns, screenColumns, statusOf, wrapLines } from '../hooks/register'
 
 const LOG = [
   '# Progress: demo',
@@ -70,8 +70,19 @@ test('dots mark done, the current step and later steps', async () => {
 
 test('the pane says so when there is no log', async $ => {
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
-  expect((await ui.find({ type: 'Text' }))?.text).toBe('No progress.md here yet.')
+  expect((await ui.find({ type: 'Text' }))?.text).toBe('No progress log for this chat yet.')
   await ui.unmount()
+})
+
+test('each chat reads its own log under the home folder', async () => {
+  expect(logPath('/home/me', 'abc-123')).toBe('/home/me/.claude/progress/abc-123.md')
+  expect(logPath('/home/me', 'other')).not.toBe(logPath('/home/me', 'abc-123'))
+})
+
+test('a session id cannot point outside the progress folder', async () => {
+  expect(logPath('/home/me', '../../evil')).toBe('/home/me/.claude/progress/evil.md')
+  expect(logPath('/home/me', '')).toBeNull()
+  expect(logPath(undefined, 'abc')).toBeNull()
 })
 
 const task = (title: string, date: string, isDone = true) => ({
@@ -109,6 +120,8 @@ test('reads the log, draws a card, and the chevron opens its steps', async ($, o
   on('ui.open', () => ({ value: { isPlaced: true } }))
   on('session.start', (_, e) => ({ cwd: e.cwd }))
   on('clock.every', () => ({ value: undefined }))
+  on('env.get', () => ({ value: '/home/me' }))
+  on('session.id', () => ({ value: 'chat-1' }))
   on('fs.exists', () => ({ value: true }))
   on('fs.stat', () => ({ value: { mtimeMs: 1 } }))
   on('fs.read', () => ({ value: LOG }))
@@ -132,6 +145,8 @@ const world = (on: any, log: () => string, opens: string[]) => {
     return { value: { isPlaced: true } }
   })
   on('session.start', (_: unknown, e: { cwd: string }) => ({ cwd: e.cwd }))
+  on('env.get', () => ({ value: '/home/me' }))
+  on('session.id', () => ({ value: 'chat-1' }))
   on('fs.exists', () => ({ value: log() !== '' }))
   on('fs.stat', () => ({ value: { mtimeMs: log().length } }))
   on('fs.read', () => ({ value: log() }))

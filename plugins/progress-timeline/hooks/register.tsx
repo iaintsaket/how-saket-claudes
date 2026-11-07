@@ -5,7 +5,6 @@ import type { Task } from '../types'
 
 const PANE = 'progress-timeline'
 const TICK_MS = 2000
-const MAX_DEPTH = 12
 const SCREEN_SHARE = 6
 const MIN_COLUMNS = 24
 const DOCK_EDGE = 1
@@ -124,18 +123,17 @@ export function layout(list: Task[]): Row[] {
   return rows
 }
 
-/** Look upward for progress.md, and stop at the repository's root. */
-async function findLog($: any): Promise<string | null> {
-  for (let depth = 0, up = ''; depth < MAX_DEPTH; depth += 1, up += '../') {
-    if (await $.fs.exists(`${up}progress.md`)) {
-      return `${up}progress.md`
-    }
-    if (await $.fs.exists(`${up}.git`)) {
-      return null
-    }
-  }
+/** Each chat logs to ~/.claude/progress/<session id>.md, the path the progress-log skill gives it. */
+export function logPath(home: string | undefined, sessionId: string): string | null {
+  const safe = sessionId.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 64)
 
-  return null
+  return home && safe ? `${home}/.claude/progress/${safe}.md` : null
+}
+
+async function findLog($: any): Promise<string | null> {
+  const path = logPath(await $.env.get('HOME'), await $.session.id())
+
+  return path && (await $.fs.exists(path)) ? path : null
 }
 
 let seen = ''
@@ -176,7 +174,7 @@ export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     await $.command.register({
       name: 'progress-timeline',
-      description: 'Show progress.md as a timeline in a pane',
+      description: 'Show the progress log of this chat as a timeline in a pane',
     })
     await refresh($)
     $.clock.every(TICK_MS, () => refresh($))
@@ -212,7 +210,7 @@ export const register: Register = on => {
     }
     const list = await read($, tasks)
     if (list.length === 0) {
-      return <Text dimColor>No progress.md here yet.</Text>
+      return <Text dimColor>No progress log for this chat yet.</Text>
     }
     const open = await read($, expanded)
     const groups = dots(list)

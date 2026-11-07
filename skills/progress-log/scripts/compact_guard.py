@@ -4,7 +4,8 @@
 Modes, each reading the hook's JSON from stdin:
   remind   UserPromptSubmit: warn when the context is large.
   rules    PreCompact: print the compaction instructions.
-  restore  SessionStart (compact): print the tail of progress.md.
+  locate   SessionStart: tell the session where its own progress log is.
+  restore  SessionStart (compact): print the tail of this session's log.
 
 A hook must never get in the way of the session, so every mode exits 0.
 """
@@ -123,19 +124,38 @@ def rules(_hook):
         print(handle.read()[:RULES_CHARS])
 
 
-def project_root(cwd):
-    current = os.path.abspath(cwd)
-    while True:
-        if os.path.exists(os.path.join(current, ".git")):
-            return current
-        parent = os.path.dirname(current)
-        if parent == current:
-            return os.path.abspath(cwd)
-        current = parent
+def safe_id(session_id):
+    return re.sub(r"[^A-Za-z0-9_-]", "", str(session_id))[:64]
+
+
+def log_path(session_id):
+    """Each session logs to ~/.claude/progress/<session id>.md, or None without an id."""
+    safe = safe_id(session_id)
+    if not safe:
+        return None
+    return os.path.join(os.path.expanduser("~"), ".claude", "progress", safe + ".md")
+
+
+def locate(hook):
+    path = log_path(hook.get("session_id", ""))
+    if path is None:
+        return
+    print(json.dumps({
+        "hookSpecificOutput": {
+            "hookEventName": "SessionStart",
+            "additionalContext": (
+                "This session's progress log is {}. Keep the plan and the record of work "
+                "there, and create it on first use. Do not use a progress.md in the "
+                "project: another session may own it.".format(path)
+            ),
+        },
+    }))
 
 
 def restore(hook):
-    path = os.path.join(project_root(hook.get("cwd") or os.getcwd()), "progress.md")
+    path = log_path(hook.get("session_id", ""))
+    if path is None:
+        return
     try:
         with open(path, errors="replace") as handle:
             text = handle.read()
@@ -151,9 +171,9 @@ def restore(hook):
 
 
 def main():
-    modes = {"remind": remind, "rules": rules, "restore": restore}
+    modes = {"remind": remind, "rules": rules, "locate": locate, "restore": restore}
     if len(sys.argv) != 2 or sys.argv[1] not in modes:
-        print("usage: compact_guard.py remind|rules|restore", file=sys.stderr)
+        print("usage: compact_guard.py remind|rules|locate|restore", file=sys.stderr)
         return 0
     try:
         modes[sys.argv[1]](json.load(sys.stdin))
