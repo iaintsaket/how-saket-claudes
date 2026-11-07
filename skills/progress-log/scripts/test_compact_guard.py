@@ -89,5 +89,18 @@ class Restore(unittest.TestCase):
             self.assertEqual(run("restore", {"session_id": "fresh", "cwd": project}, home), "")
 
 
+class ReminderPointsAtTheSessionLog(unittest.TestCase):
+    def context(self, session):
+        return json.loads(remind(200000, session))["hookSpecificOutput"]["additionalContext"]
+
+    def test_names_this_sessions_log_so_the_model_does_not_guess(self):
+        session = "log-{}".format(next(tempfile._get_candidate_names()))
+        self.assertIn(".claude/progress/{}.md".format(session), self.context(session))
+
+    def test_never_tells_the_model_to_update_the_shared_progress_md(self):
+        session = "shared-{}".format(next(tempfile._get_candidate_names()))
+        self.assertNotIn("progress.md", self.context(session))
+
+
 if __name__ == "__main__":
     unittest.main()
