@@ -41,7 +41,7 @@ Keep state in `~/.claude/staff-review/<repo>-<id>/`, outside the repo, with a `r
    python3 scripts/check_findings.py --findings "$STATE/round-1/findings.json" --diff "$STATE/round-1/change.diff" --root .
    python3 scripts/check_findings.py --findings "$STATE/round-1/findings.json" --file plan.md
    ```
-   Exit 1 means some findings were rejected, with the reason for each. `in_diff: false` marks a line the change should have touched, or a file it forgot. Retry the reviewer once if it returned invalid JSON.
+   `in_diff: false` marks a line the change should have touched, or a file it forgot. Retry the reviewer once if it returned invalid JSON.
 5. **Act.** For each accepted finding, `block` first, then `should-fix`, then `consider`:
    - `block` and `should-fix` on code: change it test-first with the `test-first` skill, then push.
    - `block` and `should-fix` on a plan: revise the plan and say what changed.
@@ -63,4 +63,4 @@ Findings stay in the chat and the state folder. Post them as PR comments only wh
 
 ## Files
 
-- `scripts/check_findings.py`: rejects findings whose quote is not on the cited line, that cite a file outside the checkout, or that lack a scenario or a change. Each accepted finding gets `in_diff`, false when the cited line is one the change left alone.
+- `scripts/check_findings.py`: the checker run at step 4.
