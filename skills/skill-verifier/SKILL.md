@@ -10,7 +10,7 @@ license: MIT
 compatibility: Needs git, Python 3.9+ and an authenticated gh CLI.
 metadata:
   author: iaintsaket
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Skill Verifier
@@ -41,12 +41,13 @@ Run scripts from the repo root, with the PR's branch checked out.
    python3 skills/skill-verifier/scripts/pr_review.py resolve --thread ID --reply "Replaced with the exact list."
    ```
    CI's token cannot close threads, so this applies to CI's threads too. Return to step 1.
-3. **Review.** Start one fresh read-only subagent with `references/reviewer-brief.md`, the changed skill's files and the PR diff. Give it no other context, and never fork this session. Save its JSON, post it, and count the round:
+3. **Review.** First reread the changed skill against `references/reviewer-brief.md`, fix what you find, then commit and push. Then start two fresh read-only subagents at once, each with the brief, the changed skill's files and the PR diff. Give them no other context, and never fork this session. Save each one's JSON, merge them, post the merge, and count the round:
    ```bash
+   python3 skills/skill-verifier/scripts/pr_review.py merge --findings a.json b.json --out findings.json
    python3 skills/skill-verifier/scripts/pr_review.py post --pr 12 --findings findings.json
-   python3 skills/skill-verifier/scripts/pr_review.py record --pr 12 --findings-count N
+   python3 skills/skill-verifier/scripts/pr_review.py record --pr 12 --findings findings.json
    ```
-   `N` is the number posted. Return to step 1.
+   `record` counts what the reviewers returned, so findings that `post` rejects never read as a clean round. Return to step 1.
 4. **Report.** Give the user the summary below. The user merges.
 
 ## Output
