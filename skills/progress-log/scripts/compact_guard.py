@@ -109,10 +109,11 @@ def remind(hook):
             "hookEventName": "UserPromptSubmit",
             "additionalContext": (
                 "Context is about {} tokens. If this prompt starts a new task, or "
-                "the current task or group of subtasks has just finished, update progress.md "
-                "first, tell the user to run /compact, and wait for them before "
+                "the current task or group of subtasks has just finished, update this "
+                "session's progress log ({log}) first, tell the user to run /compact, and wait for them before "
                 "starting the new work. If this prompt continues unfinished "
-                "work, carry on, and tell the user to run /compact when the group finishes.".format(size)
+                "work, carry on, and tell the user to run /compact when the group finishes.".format(
+                    size, log=log_path(hook.get("session_id", "")))
             ),
         },
     }))

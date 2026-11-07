@@ -5,7 +5,7 @@
     {
       "name": "progress-timeline",
       "source": "./plugins/progress-timeline",
-      "description": "Opens a pane when a plan is ready and shows progress.md as a timeline of cards"
+      "description": "Opens a pane when a plan is ready and shows the progress log of each chat as a timeline of cards"
     }
   ]
 }
