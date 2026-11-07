@@ -26,7 +26,7 @@ Each finding gives:
 - `file`, `line`, and a `quote` of at least four consecutive words copied from that line. A finding whose quote is not on that line is thrown away.
 - `class` and `severity` from the lists above.
 - `scenario`: the input or event, then what goes wrong.
-- `change`: what you would do instead, concrete enough to act on.
+- `change`: what you would do instead: name the file and the edit, or the specific design to use.
 
 Output only a JSON array, with `[]` when you find nothing:
 
