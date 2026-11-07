@@ -28,7 +28,7 @@ Each finding gives:
 - `scenario`: the input or event, then what goes wrong.
 - `change`: what you would do instead, concrete enough to act on.
 
-Order does not matter. Output only a JSON array, with `[]` when you find nothing:
+Output only a JSON array, with `[]` when you find nothing:
 
 ```json
 [{"file": "app/cache.py", "line": 4, "quote": "CACHE[key] = compute_value(key)", "class": "risk", "severity": "block", "scenario": "A long-running process adds a key per request and never removes one, so memory grows until it is killed.", "change": "Use an LRU cache with a size limit."}]
