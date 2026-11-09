@@ -62,6 +62,23 @@ class Audit(unittest.TestCase):
         self.assertEqual(totals["context_tokens"], 4000)
         self.assertEqual(totals["avg_context"], 2000)
 
+    def test_sessions_rank_by_context_with_first_typed_prompt_and_tools(self):
+        self.session("small", [prompt("small job"), assistant("a", 500)])
+        self.session("big", [
+            prompt("<command-name>/clear</command-name>"),  # not typed by the user
+            prompt("refactor the whole billing module and all of its many tests please now"),
+            assistant("b1", 9000, [tool_use("t1", "Bash", command="ls"),
+                                   tool_use("t2", "Bash", command="pwd")]),
+            assistant("b2", 9000, [tool_use("t3", "Read", file_path="/x.py")]),
+        ])
+        sessions = self.run_audit()["sessions"]
+        self.assertEqual([s["session"] for s in sessions], ["big", "small"])
+        self.assertEqual(sessions[0]["context_tokens"], 18000)
+        self.assertEqual(sessions[0]["calls"], 2)
+        self.assertEqual(sessions[0]["prompt"],
+                         "refactor the whole billing module and all of its many tests…")
+        self.assertEqual(sessions[0]["tools"], {"Bash": 2, "Read": 1})
+
 
 if __name__ == "__main__":
     unittest.main()
