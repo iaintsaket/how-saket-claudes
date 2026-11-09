@@ -15,7 +15,7 @@ import json
 import sys
 from pathlib import Path
 
-CLASSES = {"problem", "demand", "alternative", "requirement", "metric", "scope"}
+CLASSES = {"problem", "demand", "alternative", "requirement", "metric", "scope", "market"}
 SEVERITIES = ("block", "should-fix", "consider")
 
 
