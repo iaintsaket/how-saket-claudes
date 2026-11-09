@@ -170,17 +170,46 @@ def audit(root: Path, since: str | None = None) -> dict:
     }
 
 
+def cap(report: dict, top: int) -> dict:
+    return {k: v[:top] if isinstance(v, list) else v for k, v in report.items()}
+
+
+def as_text(report: dict) -> str:
+    t = report["totals"]
+    lines = [
+        f"{t['calls']:,} API calls, {t['context_tokens']:,} context tokens, "
+        f"{t['avg_context']:,} per call on average",
+        "",
+        "Costliest sessions (context tokens, calls, first prompt, top tools):",
+    ]
+    for s in report["sessions"]:
+        tools = ", ".join(f"{k} {v}" for k, v in list(s["tools"].items())[:4])
+        lines.append(f"  {s['context_tokens']:>13,}  {s['calls']:>5}  {s['prompt']}")
+        if tools:
+            lines.append(f"  {'':>13}  {'':>5}  tools: {tools}")
+    lines += ["", "Tool results (estimated tokens = characters / 4; images listed apart):"]
+    for r in report["tools"]:
+        images = f"  +{r['images']} images" if r["images"] else ""
+        lines.append(f"  {r['est_tokens']:>10,}  {r['calls']:>5} calls  {r['source']}{images}")
+    if report["rereads"]:
+        lines += ["", f"Files read {REREAD_AT}+ times in one session:"]
+        for r in report["rereads"]:
+            lines.append(f"  {r['est_tokens']:>10,}  x{r['reads']:<3} {r['file']}")
+    return "\n".join(lines)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--projects", type=Path, default=Path.home() / ".claude" / "projects")
     parser.add_argument("--format", choices=["text", "json"], default="text")
     parser.add_argument("--since", type=day, help="count only activity from this date (YYYY-MM-DD)")
+    parser.add_argument("--top", type=int, default=10, help="rows per list (default 10)")
     args = parser.parse_args(argv)
     if not args.projects.is_dir():
         print(f"No transcripts folder at {args.projects}", file=sys.stderr)
         return 1
-    report = audit(args.projects, args.since)
-    print(json.dumps(report, indent=2))
+    report = cap(audit(args.projects, args.since), args.top)
+    print(json.dumps(report, indent=2) if args.format == "json" else as_text(report))
     return 0
 
 
