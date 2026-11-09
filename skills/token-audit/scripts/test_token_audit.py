@@ -101,6 +101,17 @@ class Audit(unittest.TestCase):
         self.assertEqual(tools["Read"]["images"], 1)
         self.assertEqual(next(iter(tools)), "Bash: fetch_news.py")  # largest first
 
+    def test_a_file_read_three_times_in_one_session_is_flagged(self):
+        reads = [tool_use(f"r{i}", "Read", file_path="/repo/big.py") for i in range(3)]
+        twice = [tool_use(f"o{i}", "Read", file_path="/repo/small.py") for i in range(2)]
+        self.session("s", [prompt("go"), assistant("m1", 100, reads + twice)]
+                     + [result(f"r{i}", "a" * 800) for i in range(3)]
+                     + [result(f"o{i}", "b" * 80) for i in range(2)])
+        self.session("t", [prompt("go"), assistant("m2", 100, twice[:1])])  # other session
+        self.assertEqual(self.run_audit()["rereads"], [
+            {"session": "s", "file": "/repo/big.py", "reads": 3, "est_tokens": 600},
+        ])
+
 
 if __name__ == "__main__":
     unittest.main()
