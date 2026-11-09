@@ -129,6 +129,21 @@ class Audit(unittest.TestCase):
         self.assertEqual(done.returncode, 2)
         self.assertIn("YYYY-MM-DD", done.stderr)
 
+    def test_text_report_is_short_and_capped_by_top(self):
+        for n, ctx in (("first", 9000), ("second", 5000), ("third", 1000)):
+            self.session(n, [prompt(f"{n} task"), assistant(n, ctx)])
+        done = subprocess.run(
+            [sys.executable, str(SCRIPT), "--projects", str(self.root), "--top", "2"],
+            capture_output=True, text=True,
+        )
+        self.assertEqual(done.returncode, 0, done.stderr)
+        out = done.stdout
+        self.assertIn("3 API calls, 15,000 context tokens, 5,000 per call on average", out)
+        self.assertIn("first task", out)
+        self.assertIn("second task", out)
+        self.assertNotIn("third task", out)
+        self.assertNotIn("{", out)  # not the JSON
+
 
 if __name__ == "__main__":
     unittest.main()
