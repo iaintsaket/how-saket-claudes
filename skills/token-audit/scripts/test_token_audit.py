@@ -112,6 +112,23 @@ class Audit(unittest.TestCase):
             {"session": "s", "file": "/repo/big.py", "reads": 3, "est_tokens": 600},
         ])
 
+    def test_since_counts_only_activity_from_that_date(self):
+        self.session("old", [prompt("old"), assistant("a", 1000, ts="2026-10-01T09:00:00Z")])
+        self.session("mixed", [
+            prompt("mixed"),
+            assistant("b", 7000, ts="2026-10-31T23:59:59Z"),
+            assistant("c", 500, ts="2026-11-01T00:00:00Z"),
+        ])
+        report = self.run_audit("--since", "2026-11-01")
+        self.assertEqual(report["totals"], {"calls": 1, "context_tokens": 500, "avg_context": 500})
+        self.assertEqual([s["session"] for s in report["sessions"]], ["mixed"])
+
+    def test_since_refuses_a_date_it_cannot_read(self):
+        done = subprocess.run([sys.executable, str(SCRIPT), "--since", "last week"],
+                              capture_output=True, text=True)
+        self.assertEqual(done.returncode, 2)
+        self.assertIn("YYYY-MM-DD", done.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()
