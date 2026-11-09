@@ -33,6 +33,7 @@ def context_of(usage: dict) -> int:
 
 
 PROMPT_CHARS = 60
+REREAD_AT = 3  # reads of one file in one session before it is flagged
 
 
 def first_prompt(msg: dict) -> str | None:
@@ -90,11 +91,14 @@ def result_size(content) -> tuple[int, int]:
 
 def audit(root: Path) -> dict:
     sessions = []
+    rereads: list[dict] = []
     tools: dict[str, dict] = {}
     for path in sorted(root.glob("*/*.jsonl")):
         msgs: dict[str, dict] = {}
         prompt = None
         sources: dict[str, str] = {}
+        read_paths: dict[str, str] = {}
+        reads: dict[str, list[int]] = {}
         for e in entries(path):
             msg = e.get("message") or {}
             if e.get("type") == "user" and prompt is None:
@@ -103,9 +107,16 @@ def audit(root: Path) -> dict:
                 if not isinstance(block, dict):
                     continue
                 if block.get("type") == "tool_use":
-                    sources[block.get("id")] = source_of(block.get("name", "?"), block.get("input") or {})
+                    inp = block.get("input") or {}
+                    sources[block.get("id")] = source_of(block.get("name", "?"), inp)
+                    if block.get("name") == "Read":
+                        read_paths[block.get("id")] = str(inp.get("file_path", "?"))
                 elif block.get("type") == "tool_result" and block.get("tool_use_id") in sources:
                     chars, media = result_size(block.get("content"))
+                    if block["tool_use_id"] in read_paths:
+                        seen = reads.setdefault(read_paths[block["tool_use_id"]], [0, 0])
+                        seen[0] += 1
+                        seen[1] += chars
                     row = tools.setdefault(sources[block["tool_use_id"]],
                                            {"calls": 0, "chars": 0, "images": 0})
                     row["calls"] += 1
@@ -117,6 +128,11 @@ def audit(root: Path) -> dict:
                 key = msg.get("id") or str(id(e))
                 kept = msgs.setdefault(key, {"usage": msg["usage"], "content": []})
                 kept["content"] += msg.get("content") or []
+        rereads += [
+            {"session": path.stem, "file": f, "reads": n, "est_tokens": chars // 4}
+            for f, (n, chars) in reads.items()
+            if n >= REREAD_AT
+        ]
         if msgs:
             sessions.append({
                 "session": path.stem,
@@ -140,6 +156,7 @@ def audit(root: Path) -> dict:
             {"source": src, "calls": r["calls"], "est_tokens": r["chars"] // 4, "images": r["images"]}
             for src, r in sorted(tools.items(), key=lambda kv: -kv[1]["chars"])
         ],
+        "rereads": sorted(rereads, key=lambda r: -r["est_tokens"]),
     }
 
 
