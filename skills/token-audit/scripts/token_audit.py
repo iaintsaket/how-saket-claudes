@@ -31,21 +31,60 @@ def context_of(usage: dict) -> int:
     )
 
 
+PROMPT_CHARS = 60
+
+
+def first_prompt(msg: dict) -> str | None:
+    text = msg.get("content")
+    if not isinstance(text, str) or not text.strip() or text.lstrip().startswith("<"):
+        return None  # tool results, slash commands and harness notes are not typed prompts
+    text = " ".join(text.split())
+    return text if len(text) <= PROMPT_CHARS else text[:PROMPT_CHARS].rstrip() + "…"
+
+
+def tool_counts(msgs: dict) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for msg in msgs.values():
+        for block in msg.get("content") or []:
+            if isinstance(block, dict) and block.get("type") == "tool_use":
+                counts[block.get("name", "?")] = counts.get(block.get("name", "?"), 0) + 1
+    return dict(sorted(counts.items(), key=lambda kv: -kv[1]))
+
+
 def audit(root: Path) -> dict:
-    calls: dict[tuple[str, str], int] = {}
+    sessions = []
     for path in sorted(root.glob("*/*.jsonl")):
+        msgs: dict[str, dict] = {}
+        prompt = None
         for e in entries(path):
             msg = e.get("message") or {}
+            if e.get("type") == "user" and prompt is None:
+                prompt = first_prompt(msg)
             if e.get("type") == "assistant" and msg.get("usage"):
-                # one response can be logged as several lines sharing an id: count it once
-                calls[(str(path), msg.get("id") or id(e))] = context_of(msg["usage"])
-    total = sum(calls.values())
+                # one response can be logged as several lines sharing an id: count it once,
+                # but keep every line's content blocks
+                key = msg.get("id") or str(id(e))
+                kept = msgs.setdefault(key, {"usage": msg["usage"], "content": []})
+                kept["content"] += msg.get("content") or []
+        if msgs:
+            sessions.append({
+                "session": path.stem,
+                "project": path.parent.name,
+                "calls": len(msgs),
+                "context_tokens": sum(context_of(m["usage"]) for m in msgs.values()),
+                "prompt": prompt or "",
+                "tools": tool_counts(msgs),
+            })
+    sessions.sort(key=lambda s: -s["context_tokens"])
+    calls = sum(s["calls"] for s in sessions)
+    total = sum(s["context_tokens"] for s in sessions)
     return {
         "totals": {
-            "calls": len(calls),
+            "calls": calls,
             "context_tokens": total,
-            "avg_context": total // len(calls) if calls else 0,
-        }
+            "avg_context": total // calls if calls else 0,
+        },
+        "sessions": sessions,
     }
 
 
