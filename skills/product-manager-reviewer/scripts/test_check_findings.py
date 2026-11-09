@@ -45,6 +45,16 @@ class Accepts(unittest.TestCase):
         self.assertEqual(check(), ([], []))
 
 
+class Market(unittest.TestCase):
+    def test_accepts_a_market_finding_about_price_and_payment(self):
+        item = finding(severity="should-fix", line=4, quote="Users will love streaks",
+                       assumption="The target group pays a monthly fee for habit tracking.",
+                       test="Ask 10 people in the target group what they paid for apps last month.",
+                       **{"class": "market"})
+        accepted, rejected = check(item)
+        self.assertEqual((len(accepted), rejected), (1, []))
+
+
 class Rejects(unittest.TestCase):
     def reason(self, **changes):
         _, rejected = check(finding(**changes))
