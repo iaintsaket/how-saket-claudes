@@ -79,6 +79,28 @@ class Audit(unittest.TestCase):
                          "refactor the whole billing module and all of its many tests…")
         self.assertEqual(sessions[0]["tools"], {"Bash": 2, "Read": 1})
 
+    def test_tool_results_group_by_source_and_images_count_apart(self):
+        self.session("s", [
+            prompt("go"),
+            assistant("m1", 100, [
+                tool_use("t1", "Bash", command="cd /repo && python3 scripts/fetch_news.py --days 3"),
+                tool_use("t2", "Bash", command="python3 scripts/fetch_news.py"),
+                tool_use("t3", "mcp__canva__search-designs", query="x"),
+                tool_use("t4", "Read", file_path="/tmp/shot.png"),
+            ]),
+            result("t1", "x" * 4000),
+            result("t2", "x" * 400),
+            result("t3", [{"type": "text", "text": "y" * 800}]),
+            result("t4", [{"type": "image", "source": {"type": "base64", "data": "z" * 90000}}]),
+        ])
+        tools = {t["source"]: t for t in self.run_audit()["tools"]}
+        self.assertEqual(tools["Bash: fetch_news.py"]["calls"], 2)
+        self.assertEqual(tools["Bash: fetch_news.py"]["est_tokens"], 1100)  # 4,400 chars / 4
+        self.assertEqual(tools["mcp: canva"]["est_tokens"], 200)
+        self.assertEqual(tools["Read"]["est_tokens"], 0)  # base64 is not what an image costs
+        self.assertEqual(tools["Read"]["images"], 1)
+        self.assertEqual(next(iter(tools)), "Bash: fetch_news.py")  # largest first
+
 
 if __name__ == "__main__":
     unittest.main()
