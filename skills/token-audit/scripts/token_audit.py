@@ -12,6 +12,7 @@ import argparse
 import json
 import re
 import sys
+from datetime import date
 from pathlib import Path
 
 
@@ -89,7 +90,14 @@ def result_size(content) -> tuple[int, int]:
     return chars, media
 
 
-def audit(root: Path) -> dict:
+def day(text: str) -> str:
+    try:
+        return date.fromisoformat(text).isoformat()
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"not a date: {text!r} (use YYYY-MM-DD)") from None
+
+
+def audit(root: Path, since: str | None = None) -> dict:
     sessions = []
     rereads: list[dict] = []
     tools: dict[str, dict] = {}
@@ -100,6 +108,8 @@ def audit(root: Path) -> dict:
         read_paths: dict[str, str] = {}
         reads: dict[str, list[int]] = {}
         for e in entries(path):
+            if since and str(e.get("timestamp", ""))[:10] < since and e.get("timestamp"):
+                continue
             msg = e.get("message") or {}
             if e.get("type") == "user" and prompt is None:
                 prompt = first_prompt(msg)
@@ -164,11 +174,12 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--projects", type=Path, default=Path.home() / ".claude" / "projects")
     parser.add_argument("--format", choices=["text", "json"], default="text")
+    parser.add_argument("--since", type=day, help="count only activity from this date (YYYY-MM-DD)")
     args = parser.parse_args(argv)
     if not args.projects.is_dir():
         print(f"No transcripts folder at {args.projects}", file=sys.stderr)
         return 1
-    report = audit(args.projects)
+    report = audit(args.projects, args.since)
     print(json.dumps(report, indent=2))
     return 0
 
