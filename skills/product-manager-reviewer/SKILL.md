@@ -8,7 +8,7 @@ description: >-
   cheapest test, or (for a blocker) offer a pivot. Use when the user says "product review", "pm
   review", "is this a real product", "would anyone want this", "review my requirements" or
   "/product-manager-reviewer". Not for code or design, which staff-engineer-reviewer does, for
-  security, which blind-pr-review does, or for market research.
+  security, which blind-pr-review does, or for gathering market data.
 license: MIT
 compatibility: Needs Python 3.9+ and a harness that can start a read-only subagent.
 metadata:
