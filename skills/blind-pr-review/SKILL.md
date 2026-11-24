@@ -11,7 +11,7 @@ license: MIT
 compatibility: Needs git, Python 3.9+ and the Claude Code CLI. Uses the gh CLI for PR numbers.
 metadata:
   author: iaintsaket
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Blind PR Review
