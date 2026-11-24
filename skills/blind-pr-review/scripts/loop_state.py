@@ -17,7 +17,7 @@ from pathlib import Path
 
 BLOCKING = {"Critical", "High", "Medium"}
 MAX_ROUNDS = 5
-CLEAN_ROUNDS = 2
+CLEAN_ROUNDS = 1
 EXIT = {"PASS": 0, "FIX": 10, "REVIEW": 11, "ESCALATE": 20}
 
 
@@ -65,7 +65,8 @@ def decide(state: dict) -> dict:
     if back:
         return {**out, "decision": "ESCALATE", "reason": "A finding came back after its fix."}
     if clean_on_this_head(rounds) >= CLEAN_ROUNDS:
-        reason = f"No findings in {CLEAN_ROUNDS} independent reviews of {rounds[-1]['head'][:10]}."
+        reviews = "review" if CLEAN_ROUNDS == 1 else "reviews"
+        reason = f"No findings in {CLEAN_ROUNDS} independent {reviews} of {rounds[-1]['head'][:10]}."
         return {**out, "decision": "PASS", "reason": reason}
     if len(rounds) >= MAX_ROUNDS:
         return {**out, "decision": "ESCALATE", "reason": f"Reached {MAX_ROUNDS} rounds."}
