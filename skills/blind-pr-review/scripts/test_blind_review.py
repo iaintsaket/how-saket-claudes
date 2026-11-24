@@ -22,30 +22,27 @@ def fresh() -> dict:
 
 
 class Loop(unittest.TestCase):
-    def test_two_clean_rounds_on_one_head_pass(self):
-        s = fresh()
-        self.assertEqual(loop_state.record(s, "h1", [])["decision"], "REVIEW")
-        self.assertEqual(loop_state.record(s, "h1", [])["decision"], "PASS")
+    def test_one_clean_round_passes(self):
+        out = loop_state.record(fresh(), "h1", [])
+        self.assertEqual(out["decision"], "PASS")
+        self.assertIn("1 independent review of", out["reason"])
 
-    def test_a_new_head_restarts_the_clean_count(self):
+    def test_a_fixed_head_passes_on_its_own_clean_round(self):
         s = fresh()
-        loop_state.record(s, "h1", [])
-        self.assertEqual(loop_state.record(s, "h2", [])["decision"], "REVIEW")
+        loop_state.record(s, "h1", [HIGH])
         self.assertEqual(loop_state.record(s, "h2", [])["decision"], "PASS")
 
     def test_a_blocking_finding_needs_a_fix(self):
         self.assertEqual(loop_state.record(fresh(), "h1", [HIGH])["decision"], "FIX")
 
-    def test_a_finding_between_clean_rounds_resets_the_count(self):
+    def test_a_finding_on_a_head_blocks_it_even_after_a_clean_round(self):
         s = fresh()
         loop_state.record(s, "h1", [])
-        loop_state.record(s, "h1", [HIGH])
-        self.assertEqual(loop_state.record(s, "h1", [])["decision"], "REVIEW")
+        self.assertEqual(loop_state.record(s, "h1", [HIGH])["decision"], "FIX")
 
     def test_low_findings_do_not_block_but_are_kept_for_the_human(self):
         s = fresh()
-        loop_state.record(s, "h1", [LOW])
-        out = loop_state.record(s, "h1", [])
+        out = loop_state.record(s, "h1", [LOW])
         self.assertEqual(out["decision"], "PASS")
         self.assertEqual(out["low"], [LOW])
 
@@ -59,7 +56,6 @@ class Loop(unittest.TestCase):
         s = fresh()
         for n in range(3):
             loop_state.record(s, f"h{n}", [dict(HIGH, file=f"{n}.py")])
-        loop_state.record(s, "h9", [])
         self.assertEqual(loop_state.record(s, "h9", [])["decision"], "PASS")
 
     def test_a_finding_back_after_a_fix_escalates(self):
@@ -76,7 +72,6 @@ class Loop(unittest.TestCase):
         s = fresh()
         loop_state.record(s, "h1", [HIGH])
         loop_state.dispute(s, loop_state.fingerprint(HIGH), "no failing test possible")
-        loop_state.record(s, "h2", [])
         self.assertEqual(loop_state.record(s, "h2", [])["decision"], "ESCALATE")
 
     def test_the_author_cannot_write_pass_into_the_cli(self):
