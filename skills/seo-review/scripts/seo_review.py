@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Decide whether a change needs an SEO review, and keep only reviewer findings that hold up.
 
-    git diff --name-only BASE...HEAD | seo_review.py scope
+    git diff BASE...HEAD | seo_review.py scope
     seo_review.py check --findings F.json --root CHECKOUT
 
-`scope` prints the changed files that can change how a page is found, indexed or shared, and
+`scope` reads a unified diff and prints the changed files that can change how a page is found,
+indexed or shared: a page, head or crawl file by its path, or any other file whose added lines
+touch titles, descriptions, canonicals, share tags, robots, sitemaps or structured data. It
 exits 1 with "no SEO-relevant change" when there are none. `check` prints
 {"accepted": [...], "rejected": [{"finding": ..., "reason": ...}]}, worst first, and exits 1
 when any finding is rejected.
@@ -28,6 +30,12 @@ RELEVANT = [
 # Tests, docs about the repo itself and lockfiles never reach a crawler.
 IGNORED = [r"\.(test|spec)\.\w+$", r"(^|/)(__tests__|e2e|tests?)/", r"(^|/)(README|CHANGELOG|CONTRIBUTING|SECURITY|LICENSE)(\.md)?$", r"lock"]
 
+# Added lines that set what search engines or share previews read, wherever the file lives.
+SEO_TERMS = re.compile(
+    r"\b(title|description|canonical|metadata|generateMetadata|noindex|nofollow|robots|sitemap|hreflang|schema\.org|ld\+json)\b"
+    r"|og:|twitter:|<h1\b|<head\b|\balt="
+)
+
 CLASSES = ("content", "crawl", "intent", "links", "performance", "sharing", "structured-data")
 SEVERITIES = ("block", "should-fix", "consider")
 REQUIRED_TEXT = ("impact", "change")
@@ -38,6 +46,20 @@ def relevant(paths):
     def keep(p):
         return any(re.search(r, p) for r in RELEVANT) and not any(re.search(r, p, re.I) for r in IGNORED)
     return [p for p in paths if p and keep(p)]
+
+
+def relevant_in_diff(diff):
+    """Files a unified diff changes that are SEO-relevant by path or by what their added lines say."""
+    files, path = {}, None
+    for line in diff.split("\n"):
+        if line.startswith("diff --git "):
+            path = line.split(" b/", 1)[-1]
+            files[path] = False
+        elif path and line.startswith("+") and not line.startswith("+++") and SEO_TERMS.search(line):
+            files[path] = True
+    ignored = [p for p in files if any(re.search(r, p, re.I) for r in IGNORED)]
+    by_path = set(relevant(list(files)))
+    return [p for p in files if p not in ignored and (p in by_path or files[p])]
 
 
 def problem(item, root):
@@ -79,14 +101,14 @@ def check(findings, root):
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = parser.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("scope", help="read changed paths on stdin")
+    sub.add_parser("scope", help="read a unified diff on stdin")
     c = sub.add_parser("check", help="check reviewer findings")
     c.add_argument("--findings", required=True)
     c.add_argument("--root", default=".")
     args = parser.parse_args()
 
     if args.cmd == "scope":
-        paths = relevant(sys.stdin.read().split("\n"))
+        paths = relevant_in_diff(sys.stdin.read())
         print("\n".join(paths) if paths else "no SEO-relevant change")
         return 0 if paths else 1
     accepted, rejected = check(json.loads(Path(args.findings).read_text()), args.root)

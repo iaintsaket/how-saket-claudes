@@ -31,9 +31,9 @@ Judge what a script cannot: whether a page's title, heading and copy match what 
 
 Keep state in `~/.claude/seo-review/<repo>-<id>/`, outside the repo.
 
-1. **Scope.** List the changed files and keep the SEO-relevant ones. Stop with "No SEO-relevant change" when the script exits 1:
+1. **Scope.** Keep the changed files that can change how a page is found, indexed or shared, by their path or by what their added lines set. Stop with "No SEO-relevant change" when the script exits 1:
    ```bash
-   git diff --name-only origin/main...HEAD | python3 scripts/seo_review.py scope > "$STATE/scope.txt"
+   git diff origin/main...HEAD | python3 scripts/seo_review.py scope > "$STATE/scope.txt"
    git diff origin/main...HEAD -- $(cat "$STATE/scope.txt") > "$STATE/change.diff"
    ```
 2. **Run the project's own check.** Look for an SEO script in the project, such as an `seo` entry in `package.json` scripts, and run it after a build. Save its output as `$STATE/check.txt`. If the project has none, note that for the report.
