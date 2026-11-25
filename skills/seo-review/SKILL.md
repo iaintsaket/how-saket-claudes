@@ -36,7 +36,7 @@ Keep state in `~/.claude/seo-review/<repo>-<id>/`, outside the repo.
    git diff origin/main...HEAD | python3 scripts/seo_review.py scope > "$STATE/scope.txt"
    git diff origin/main...HEAD -- $(cat "$STATE/scope.txt") > "$STATE/change.diff"
    ```
-2. **Run the project's own check.** Look for an SEO script in the project, such as an `seo` entry in `package.json` scripts, and run it after a build. Save its output as `$STATE/check.txt`. If the project has none, note that for the report.
+2. **Run the project's own check.** Look for an SEO script in the project, such as an `seo` entry in `package.json` scripts, and run it after a build. Save its output as `$STATE/check.txt`. If the project has none, say so in the report.
 3. **Review.** Start one fresh read-only subagent with `references/reviewer-brief.md`, the diff, the scope list, the check output and, when the project builds static HTML, the built files for the changed routes. Give it no chat history and no earlier findings. Save its JSON as `$STATE/findings.json`, and retry once if the JSON is invalid.
 4. **Check.** Keep only findings that hold to the contract:
    ```bash
