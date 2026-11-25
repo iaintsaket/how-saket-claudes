@@ -28,10 +28,25 @@ class Scope(unittest.TestCase):
         ]
         self.assertEqual(sr.relevant(changed), changed[:11])
 
-    def test_cli_exits_1_and_says_so_when_nothing_is_relevant(self):
-        done = run("scope", stdin="src/api/client.ts\nREADME.md\n")
+    def test_a_file_outside_page_paths_counts_when_its_added_lines_touch_seo(self):
+        diff = "\n".join([
+            "diff --git a/src/lib/copy.ts b/src/lib/copy.ts", "--- a/src/lib/copy.ts", "+++ b/src/lib/copy.ts", "@@ -1 +1 @@",
+            "-  return `${name} options`;", "+  return { title: `${name}: from ${price}`, description };",
+            "diff --git a/src/api/client.ts b/src/api/client.ts", "--- a/src/api/client.ts", "+++ b/src/api/client.ts", "@@ -1 +1 @@",
+            "+  const res = await fetch(url);",
+            "diff --git a/src/app/x.test.tsx b/src/app/x.test.tsx", "--- a/src/app/x.test.tsx", "+++ b/src/app/x.test.tsx", "@@ -1 +1 @@",
+            "+  expect(meta.title).toBe(\"X\");",
+            "diff --git a/src/app/about/page.tsx b/src/app/about/page.tsx", "--- a/src/app/about/page.tsx", "+++ b/src/app/about/page.tsx", "@@ -1 +1 @@",
+            "+  return <p>hi</p>;",
+        ])
+        self.assertEqual(sr.relevant_in_diff(diff), ["src/lib/copy.ts", "src/app/about/page.tsx"])
+
+    def test_cli_reads_a_diff_and_exits_1_when_nothing_is_relevant(self):
+        plumbing = "diff --git a/README.md b/README.md\n--- a/README.md\n+++ b/README.md\n@@ -1 +1 @@\n+the title of this repo\n"
+        done = run("scope", stdin=plumbing)
         self.assertEqual((done.returncode, done.stdout.strip()), (1, "no SEO-relevant change"))
-        done = run("scope", stdin="src/app/about/page.tsx\n")
+        page = "diff --git a/src/app/about/page.tsx b/src/app/about/page.tsx\n+++ b/src/app/about/page.tsx\n@@ -1 +1 @@\n+x\n"
+        done = run("scope", stdin=page)
         self.assertEqual((done.returncode, done.stdout.strip()), (0, "src/app/about/page.tsx"))
 
 
